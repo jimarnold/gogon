@@ -5,7 +5,6 @@ import "math/rand"
 import "time"
 import "fmt"
 import "github.com/go-gl/gl"
-//import "github.com/go-gl/glu"
 import "github.com/go-gl/glfw"
 
 var things []Thing
@@ -14,9 +13,10 @@ func main() {
   things = make([]Thing, 16)
   rand.Seed(time.Now().UTC().UnixNano())
   for i:=range things {
-    things[i].location.x = rand.Float64() * 800
-    things[i].location.y = rand.Float64() * 600
+    things[i].location = Vector{rand.Float64() * 800, rand.Float64() * 600}
+    things[i].direction = Vector{(0.5 - rand.Float64()) * 10, (0.5 - rand.Float64()) * 10}
     things[i].size = float64(i)
+    fmt.Printf("%d direction %f,%f", i, things[i].direction.x, things[i].direction.y)
   }
   initGlfw(800,600)
 
@@ -31,15 +31,30 @@ func main() {
 
 func update(elapsed float64) {
   for i:= range things {
-    newX := math.Mod(things[i].location.x + (elapsed * float64(100 - things[i].size) * 4.0), 800)
-    newY := math.Mod(things[i].location.y + (elapsed * float64(100 - things[i].size) * 4.0), 600)
-    things[i].location.x = newX
-    things[i].location.y = newY
+    thing := things[i]
+    newX := thing.location.x + (elapsed * thing.direction.x * 10)
+    newY := thing.location.y + (elapsed * thing.direction.y * 10)
+    thing.location.x = newX
+    thing.location.y = newY
+    if thing.location.x > 800 {
+      thing.location.x = thing.location.x - 800
+    }
+    if thing.location.x < 0 {
+      thing.location.x = thing.location.x + 800
+    }
+    if thing.location.y > 600 {
+      thing.location.y = thing.location.y - 600
+    }
+    if thing.location.y < 0 {
+      thing.location.y = thing.location.y + 600
+    }
+
+    things[i] = thing
   }
 
   for i:= range things {
     for j := range things {
-      if i == j {
+      if i == j || (things[i].size == 0 || things[j].size == 0) {
         continue
       }
 
@@ -76,6 +91,7 @@ type Vector struct {
 
 type Thing struct {
   location Vector
+  direction Vector
   size float64
 }
 
