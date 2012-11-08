@@ -12,17 +12,19 @@ const width float64 = 800
 const height float64 = 600
 
 func main() {
-  things = make([]Thing, 16)
+  things = make([]Thing, 64)
   rand.Seed(time.Now().UTC().UnixNano())
   for i:=range things {
     things[i].location = Vector{random(0,1) * width, random(0,1) * height}
     things[i].direction = Vector{random(-1,1), random(-1,1)}
-    things[i].size = float64(i)
+    things[i].targetSize = random(1, 5)
+    things[i].size = things[i].targetSize
   }
   initGlfw(int(width),int(height))
-
+  previousFrameTime := time.Now()
   for glfw.WindowParam(glfw.Opened) == 1 {
-    elapsed := 0.01666666
+    elapsed := time.Since(previousFrameTime).Seconds()
+    previousFrameTime = time.Now()
     update(elapsed)
     render()
     glfw.SwapBuffers()
@@ -32,6 +34,11 @@ func main() {
 func update(elapsed float64) {
   for i:= range things {
     thing := things[i]
+    if thing.size == 0 {
+      continue
+    }
+    thing.Grow(elapsed * 10)
+
     newX := thing.location.x + (elapsed * thing.direction.x * 100)
     newY := thing.location.y + (elapsed * thing.direction.y * 100)
     thing.location.x = newX
@@ -75,8 +82,18 @@ func(this Thing) intersects(other Thing) bool {
 }
 
 func(this *Thing) absorb(other *Thing) {
-  this.size += other.size
+  this.targetSize = this.size + other.size
   other.size = 0
+}
+
+func(this *Thing) Grow(amount float64) {
+  if this.size < this.targetSize {
+    this.size += amount
+  }
+
+  if this.size > this.targetSize {
+    this.size = this.targetSize
+  }
 }
 
 func random(min, max float64) float64 {
@@ -91,6 +108,7 @@ type Thing struct {
   location Vector
   direction Vector
   size float64
+  targetSize float64
 }
 
 func initGlfw(width, height int) {
@@ -142,11 +160,11 @@ func render() {
   gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
   gl.LineWidth(1)
   gl.LoadIdentity()
-  gl.Color3ub(255,255,255)
   for t := range things {
     if things[t].size == 0 {
       continue
     }
+    gl.Color3ub(255 - uint8(things[t].size),255,255 - uint8(things[t].size))
     gl.Begin(gl.LINE_LOOP)
       x:=things[t].location.x
       y:=things[t].location.y
