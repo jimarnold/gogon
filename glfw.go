@@ -4,8 +4,7 @@ import "fmt"
 import "github.com/go-gl/gl"
 import "github.com/go-gl/glfw"
 
-func initGlfw(width, height int) {
-  var err error
+func initGlfw(width, height int) (err error) {
   if err = glfw.Init(); err != nil {
     fmt.Printf("%v\n", err)
     return
@@ -28,6 +27,7 @@ func initGlfw(width, height int) {
   gl.Hint(gl.LINE_SMOOTH_HINT, gl.NICEST);
   gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
   gl.LineWidth(1)
+  return
 }
 
 func terminateGlfw() {

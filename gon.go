@@ -1,16 +1,18 @@
 package main
 
+import "os"
 import "math"
 import "time"
 import "github.com/go-gl/gl"
 import "github.com/go-gl/glfw"
 
-var things []*Thing
+var things []Element
+var player Element
 const width float64 = 800
 const height float64 = 600
 
 func main() {
-  things = make([]*Thing, 64)
+  things = make([]Element, 64)
   for i := range things {
     aSize := random(1, 5)
     things[i] = &Thing {
@@ -20,8 +22,14 @@ func main() {
       size : aSize,
     }
   }
+  player = &Player{Thing{location : Vector{width / 2, height / 2}, targetSize : 10, size : 10}}
+  things = append(things, player)
+  err := initGlfw(int(width),int(height))
+  if err != nil {
+    os.Exit(1)
+  }
 
-  initGlfw(int(width),int(height))
+  defer terminateGlfw()
 
   previousFrameTime := time.Now()
   for glfw.WindowParam(glfw.Opened) == 1 {
@@ -40,10 +48,19 @@ func update(elapsed float64) {
   }
 
   collide()
+  win()
 }
 
 type Vector struct {
   x,y float64
+}
+
+func(v1 Vector) Add(v2 Vector) Vector {
+  return Vector{v1.x + v2.x, v2.y + v2.y}
+}
+
+func(v Vector) Mult(s float64) Vector {
+  return Vector{v.x * s, v.y * s}
 }
 
 func render() {
@@ -51,13 +68,20 @@ func render() {
   gl.Clear(gl.COLOR_BUFFER_BIT)
   gl.LoadIdentity()
   for _, thing := range things {
-    if thing.size == 0 {
+    if thing.isDead() {
       continue
     }
-    x:=thing.location.x
-    y:=thing.location.y
-    radius := thing.size
-    gl.Color3ub(255 - uint8(thing.size),255,255 - uint8(thing.size))
+    x:=thing.getLocation().x
+    y:=thing.getLocation().y
+    radius := thing.getSize()
+    if thing == player {
+      gl.Color3ub(0,0,255)
+    } else if thing.biggerThan(player) {
+      gl.Color3ub(255,0,0)
+    } else {
+      gl.Color3ub(0,255,0)
+    }
+
     gl.Begin(gl.LINE_LOOP)
       for i := 0.0; i < radius * 8; i++ {
         angle := i*2.0*math.Pi/(radius * 8)
