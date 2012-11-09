@@ -47,18 +47,6 @@ func update(elapsed float64) {
   win()
 }
 
-type Vector struct {
-  x,y float64
-}
-
-func(v1 Vector) Add(v2 Vector) Vector {
-  return Vector{v1.x + v2.x, v2.y + v2.y}
-}
-
-func(v Vector) Mult(s float64) Vector {
-  return Vector{v.x * s, v.y * s}
-}
-
 func render() {
   gl.ClearColor(0.0, 0.0, 0.0, 0)
   gl.Clear(gl.COLOR_BUFFER_BIT)

@@ -20,7 +20,6 @@ func collide() {
     }
   }
 }
-type GameCondition int
 
 func win() {
   if player.isDead() {
