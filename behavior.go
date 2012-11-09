@@ -4,8 +4,8 @@ import "fmt"
 import "os"
 
 func collide() {
-  for _,a:= range things {
-    for _,b := range things {
+  for _,a:= range elements {
+    for _,b := range elements {
       if a == b || (a.isDead() || b.isDead()) {
         continue
       }
@@ -28,8 +28,8 @@ func win() {
     os.Exit(1)
   }
 
-  for _, thing := range things {
-    if thing != player && !thing.isDead() {
+  for _, e := range elements {
+    if e != player && !e.isDead() {
       return
     }
   }

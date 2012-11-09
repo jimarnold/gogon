@@ -1,21 +1,23 @@
 package main
 
 import "fmt"
+import "os"
 import "github.com/go-gl/gl"
 import "github.com/go-gl/glfw"
 
-func initGlfw(width, height int) (err error) {
-  if err = glfw.Init(); err != nil {
+func initGlfw(width, height int) {
+  if err := glfw.Init(); err != nil {
     fmt.Printf("%v\n", err)
-    return
+    os.Exit(1)
   }
 
   glfw.OpenWindowHint(glfw.FsaaSamples, 8)
 
-  if err = glfw.OpenWindow(width, height, 8, 8, 8, 8, 8, 8, glfw.Windowed); err != nil {
+  if err := glfw.OpenWindow(width, height, 8, 8, 8, 8, 8, 8, glfw.Windowed); err != nil {
     fmt.Printf("%logv\n", err)
-    return
+    os.Exit(1)
   }
+
   glfw.SetWindowSizeCallback(onResize)
   glfw.SetKeyCallback(onKey)
   glfw.SetSwapInterval(1)
