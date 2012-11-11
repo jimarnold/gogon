@@ -55,22 +55,25 @@ func render() {
     if e.isDead() {
       continue
     }
-    x:=e.getLocation().x
-    y:=e.getLocation().y
-    radius := e.getSize()
+    var color RGB
     if e == player {
-      gl.Color3ub(0,0,255)
+      color = RGB{0,0,1}
     } else if e.biggerThan(player) {
-      gl.Color3ub(255,0,0)
+      color = RGB{1,0,0}
     } else {
-      gl.Color3ub(0,255,0)
+      color = RGB{0,1,0}
     }
 
-    gl.Begin(gl.LINE_LOOP)
-      for i := 0.0; i < radius * 8; i++ {
-        angle := i*2.0*math.Pi/(radius * 8)
-        gl.Vertex2d(x + (math.Cos(angle) * radius), y + (math.Sin(angle) * radius))
-      }
-    gl.End()
+    drawCircle(e.Location(), e.Size(), color)
   }
+}
+
+func drawCircle(location Vector, radius float64, color RGB) {
+  gl.Color3d(color.r, color.g, color.b)
+  gl.Begin(gl.LINE_LOOP)
+    for i := 0.0; i < radius * 8; i++ {
+      angle := i*2.0*math.Pi/(radius * 8)
+      gl.Vertex2d(location.x + (math.Cos(angle) * radius), location.y + (math.Sin(angle) * radius))
+    }
+  gl.End()
 }

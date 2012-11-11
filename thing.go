@@ -10,8 +10,9 @@ type Element interface {
   biggerThan(other Element) bool
   die()
   isDead() bool
-  getLocation() Vector
-  getSize() float64
+  Location() Vector
+  getDirection() Vector
+  Size() float64
 }
 
 type Player struct {
@@ -26,7 +27,7 @@ type Thing struct {
 }
 
 func(this Thing) biggerThan(other Element) bool {
-  return this.size > other.getSize()
+  return this.size > other.Size()
 }
 
 func(this *Thing) die() {
@@ -37,11 +38,15 @@ func(this Thing) isDead() bool {
   return this.size == 0
 }
 
-func(this Thing) getLocation() Vector {
+func(this Thing) Location() Vector {
   return this.location
 }
 
-func(this Thing) getSize() float64 {
+func(this Thing) getDirection() Vector {
+  return this.direction
+}
+
+func(this Thing) Size() float64 {
   return this.size
 }
 
@@ -51,9 +56,9 @@ func(this *Thing) update(elapsed float64) {
   }
   this.grow(elapsed * 100)
 
-  newX := this.location.x + (elapsed * this.direction.x * 100)
-  newY := this.location.y + (elapsed * this.direction.y * 100)
-  this.location = wrapped(Vector{newX,newY})
+  x := this.location.x + (elapsed * this.direction.x * 100)
+  y := this.location.y + (elapsed * this.direction.y * 100)
+  this.location = wrapped(Vector{x,y})
 }
 
 func wrapped(target Vector) Vector {
@@ -71,15 +76,15 @@ func wrapped(target Vector) Vector {
 }
 
 func(this *Thing) intersects(other Element) bool {
-  distance := math.Sqrt(math.Pow((other.getLocation().y - this.location.y), 2) + math.Pow((other.getLocation().x - this.location.x),2) )
-  return (this.size + other.getSize()) >= distance
+  distance := this.Location().DistanceTo(other.Location())
+  return (this.size + other.Size()) >= distance
 }
 
 func(this *Thing) absorb(other Element) {
   if this.isDead() {
     return
   }
-  this.targetSize += other.getSize()
+  this.targetSize += other.Size()
   other.die()
 }
 
