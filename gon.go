@@ -5,7 +5,7 @@ import "github.com/go-gl/gl"
 import "github.com/go-gl/glfw"
 
 var elements []Element
-var player Element
+var player *Player
 const width float64 = 800
 const height float64 = 600
 

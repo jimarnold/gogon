@@ -1,7 +1,6 @@
 package main
 
 import "math"
-import "github.com/go-gl/glfw"
 
 type Element interface {
   update(elapsed float64)
@@ -14,11 +13,6 @@ type Element interface {
   Location() Vector
   getDirection() Vector
   Size() float64
-  thrust(Vector)
-}
-
-type Player struct {
-  Thing
 }
 
 type Thing struct {
@@ -101,82 +95,5 @@ func(this *Thing) grow(amount float64) {
 
   if this.size > this.targetSize {
     this.size -= amount
-  }
-}
-
-const speed float64 = 0.1
-const brake = 0.03
-
-func up() {
-  player.thrust(Vector{0,-0.1})
-}
-
-func down() {
-  player.thrust(Vector{0,0.1})
-}
-
-func left() {
-  player.thrust(Vector{-0.1,0})
-}
-
-func right() {
-  player.thrust(Vector{0.1,0})
-}
-
-func(this *Thing) thrust(v Vector) {
-  const maxSpeed float64 = 1.0
-  this.direction = this.direction.Add(v)
-  if this.direction.x > maxSpeed {
-    this.direction.x = maxSpeed
-  }
-  if this.direction.y > maxSpeed {
-    this.direction.y = maxSpeed
-  }
-  if this.direction.x < -maxSpeed {
-    this.direction.x = -maxSpeed
-  }
-  if this.direction.y < -maxSpeed {
-    this.direction.y = -maxSpeed
-  }
-}
-type Key int
-const KeyA Key = 65
-const KeyS Key = 83
-const KeyD Key = 68
-const KeyW Key = 87
-
-type KeyAction func()()
-var keyActions = map[Key] KeyAction {
-  KeyW : up,
-  KeyS : down,
-  KeyA : left,
-  KeyD : right,
-}
-var keysToHandle = []Key {KeyW,KeyS,KeyA,KeyD}
-
-func (this *Player) update(elapsed float64) {
-  this.Thing.update(elapsed)
-
-  handleKeys(keysToHandle)
-
-  if this.direction.x < 0 {
-    this.direction.x += brake
-  }
-  if this.direction.x > 0 {
-    this.direction.x -= brake
-  }
-  if this.direction.y < 0 {
-    this.direction.y += brake
-  }
-  if this.direction.y > 0 {
-    this.direction.y -= brake
-  }
-}
-
-func handleKeys(keys []Key) {
-  for _,key := range keys {
-    if(glfw.Key(int(key)) == 1) {
-      keyActions[key]()
-    }
   }
 }

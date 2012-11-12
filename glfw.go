@@ -51,3 +51,17 @@ func onKey(key, state int) {
   }
 }
 
+const KeyA int = 65
+const KeyS int = 83
+const KeyD int = 68
+const KeyW int = 87
+
+type KeyAction func()
+
+func handleKeys(keyActions map[int] KeyAction) {
+  for key,action := range keyActions {
+    if(glfw.Key(key) == 1) {
+      action()
+    }
+  }
+}
