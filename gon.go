@@ -10,9 +10,9 @@ const width float64 = 800
 const height float64 = 600
 
 func main() {
-  things := make([]Element, 16)
+  things := make([]Element, 32)
   for i := range things {
-    aSize := random(4, 8)
+    aSize := random(5, 9)
     things[i] = &Thing {
       location : Vector{random(0,1) * width, random(0,1) * height},
       direction : Vector{random(-1,1), random(-1,1)},
@@ -67,11 +67,15 @@ func render() {
   }
 }
 
+const TWO_PI = 2.0 * math.Pi
+
 func drawCircle(location Vector, radius float64, color RGB) {
   gl.Color3d(color.r, color.g, color.b)
   gl.Begin(gl.LINE_LOOP)
-    for i := 0.0; i < radius * 8; i++ {
-      angle := i*2.0*math.Pi/(radius * 8)
+    sides := radius * 2.0
+    scale := 1.0 / sides
+    for i := 0.0; i < sides; i++ {
+      angle := i * TWO_PI * scale
       gl.Vertex2d(location.x + (math.Cos(angle) * radius), location.y + (math.Sin(angle) * radius))
     }
   gl.End()
