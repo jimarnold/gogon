@@ -1,7 +1,6 @@
 package main
 
 import "math"
-import "time"
 import "github.com/go-gl/gl"
 import "github.com/go-gl/glfw"
 
@@ -11,9 +10,9 @@ const width float64 = 800
 const height float64 = 600
 
 func main() {
-  things := make([]Element, 64)
+  things := make([]Element, 16)
   for i := range things {
-    aSize := random(1, 5)
+    aSize := random(4, 8)
     things[i] = &Thing {
       location : Vector{random(0,1) * width, random(0,1) * height},
       direction : Vector{random(-1,1), random(-1,1)},
@@ -21,16 +20,16 @@ func main() {
       size : aSize,
     }
   }
-  player = &Player{Thing{location : Vector{width / 2, height / 2}, targetSize : 10, size : 10}}
+  player = &Player{Thing{location : Vector{width / 2, height / 2}, targetSize : 8, size : 8}}
   elements = append(things, player)
 
   initGlfw(int(width),int(height))
   defer terminateGlfw()
 
-  previousFrameTime := time.Now()
+  previousFrameTime := glfw.Time()
   for glfw.WindowParam(glfw.Opened) == 1 {
-    now := time.Now()
-    elapsed := now.Sub(previousFrameTime).Seconds()
+    now := glfw.Time()
+    elapsed := now - previousFrameTime
     previousFrameTime = now
     update(elapsed)
     render()
