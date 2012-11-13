@@ -1,15 +1,26 @@
 package main
 
-import "math"
 import "github.com/go-gl/gl"
 import "github.com/go-gl/glfw"
 
+type GameState string
+
+var gameState GameState
 var elements []Element
 var player *Player
+
 const width float64 = 800
 const height float64 = 600
+const running GameState = "running"
+const won GameState = "won"
+const lost GameState = "lost"
+const initialized GameState = "initialized"
 
-func main() {
+func init() {
+  gameState = initialized
+}
+
+func createElements() {
   things := make([]Element, 32)
   for i := range things {
     aSize := random(5, 9)
@@ -22,7 +33,9 @@ func main() {
   }
   player = &Player{Thing{location : Vector{width / 2, height / 2}, targetSize : 8, size : 8}}
   elements = append(things, player)
+}
 
+func main() {
   initGlfw(int(width),int(height))
   defer terminateGlfw()
 
@@ -38,45 +51,51 @@ func main() {
 }
 
 func update(elapsed float64) {
+  switch gameState {
+    case running:
+      run(elapsed)
+    case initialized, won, lost:
+      waitForReset()
+  }
+}
+
+func run(elapsed float64) {
   for _,e := range elements {
     e.update(elapsed)
   }
 
   collide()
-  win()
+  gameState = win()
+}
+
+func waitForReset() {
+  if keyDown(KeySpace) {
+    createElements()
+    gameState = running
+  }
 }
 
 func render() {
   gl.ClearColor(0.0, 0.0, 0.0, 0)
   gl.Clear(gl.COLOR_BUFFER_BIT)
-  gl.LoadIdentity()
-  for _, e := range elements {
-    if e.isDead() {
-      continue
-    }
-    var color RGB
-    if e == player {
-      color = RGB{0,0,1}
-    } else if e.biggerThan(player) {
-      color = RGB{1,0,0}
-    } else {
-      color = RGB{0,1,0}
-    }
+  switch gameState {
+    case running:
+      gl.LoadIdentity()
+      for _, e := range elements {
+        if e.isDead() {
+          continue
+        }
+        var color RGB
+        if e == player {
+          color = RGB{0,0,1}
+        } else if e.biggerThan(player) {
+          color = RGB{1,0,0}
+        } else {
+          color = RGB{0,1,0}
+        }
 
-    drawCircle(e.Location(), e.Size(), color)
+        drawCircle(e.Location(), e.Size(), color)
+      }
   }
 }
 
-const TWO_PI = 2.0 * math.Pi
-
-func drawCircle(location Vector, radius float64, color RGB) {
-  gl.Color3d(color.r, color.g, color.b)
-  gl.Begin(gl.LINE_LOOP)
-    sides := radius * 2.0
-    scale := 1.0 / sides
-    for i := 0.0; i < sides; i++ {
-      angle := i * TWO_PI * scale
-      gl.Vertex2d(location.x + (math.Cos(angle) * radius), location.y + (math.Sin(angle) * radius))
-    }
-  gl.End()
-}

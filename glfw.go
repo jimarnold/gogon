@@ -55,6 +55,7 @@ const KeyA int = 65
 const KeyS int = 83
 const KeyD int = 68
 const KeyW int = 87
+const KeySpace int = 32
 
 type KeyAction func()
 
@@ -64,4 +65,8 @@ func handleKeys(keyActions map[int] KeyAction) {
       action()
     }
   }
+}
+
+func keyDown(key int) bool {
+  return glfw.Key(key) == 1
 }
