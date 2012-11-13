@@ -1,8 +1,12 @@
 package main
 
-import "github.com/go-gl/gl"
-import "github.com/go-gl/glfw"
-
+import (
+  "fmt"
+  "os"
+  "github.com/go-gl/gl"
+  "github.com/go-gl/glfw"
+  "github.com/go-gl/gltext"
+)
 type GameState string
 
 var gameState GameState
@@ -11,6 +15,7 @@ var player *Player
 
 const width float64 = 800
 const height float64 = 600
+var screenCenter Vector = Vector{width/2.0,height/2.0}
 const running GameState = "running"
 const won GameState = "won"
 const lost GameState = "lost"
@@ -39,6 +44,7 @@ func main() {
   initGlfw(int(width),int(height))
   defer terminateGlfw()
 
+  initText()
   previousFrameTime := glfw.Time()
   for glfw.WindowParam(glfw.Opened) == 1 {
     now := glfw.Time()
@@ -75,6 +81,37 @@ func waitForReset() {
   }
 }
 
+var font *gltext.Font
+func initText() {
+  file := "./ComingSoon.ttf"
+  var err error
+  font, err = loadFont(file, 24)
+  if err != nil {
+    fmt.Printf("error loading font: %v", err)
+  //defer font.Release()
+  }
+}
+
+// loadFont loads the specified font at the given scale.
+func loadFont(file string, scale int32) (*gltext.Font, error) {
+  fd, err := os.Open(file)
+  if err != nil {
+    return nil, err 
+  }
+
+  defer fd.Close()
+
+  return gltext.LoadTruetype(fd, scale, 32, 127, gltext.LeftToRight)
+}
+
+func drawString(x, y float64, str string) error {
+  _, h := font.GlyphBounds()
+  y += float64(h)
+
+  gl.Color4f(1, 1, 1, 1)
+  err := font.Printf(float32(x), float32(y), str)
+  return err
+}
 func render() {
   gl.ClearColor(0.0, 0.0, 0.0, 0)
   gl.Clear(gl.COLOR_BUFFER_BIT)
@@ -96,6 +133,9 @@ func render() {
 
         drawCircle(e.Location(), e.Size(), color)
       }
+    case initialized, won, lost:
+      //gl.LoadIdentity()
+      drawString(screenCenter.x, screenCenter.y,"Press Space to play!")
   }
 }
 
