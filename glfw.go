@@ -14,7 +14,7 @@ func initGlfw(width, height int) {
   glfw.OpenWindowHint(glfw.FsaaSamples, 8)
 
   if err := glfw.OpenWindow(width, height, 8, 8, 8, 8, 8, 8, glfw.Windowed); err != nil {
-    fmt.Printf("%logv\n", err)
+    fmt.Printf("%v\n", err)
     os.Exit(1)
   }
 

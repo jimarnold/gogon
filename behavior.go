@@ -1,7 +1,5 @@
 package main
 
-import "fmt"
-
 func collide() {
   for _,a:= range elements {
     for _,b := range elements {
@@ -22,7 +20,6 @@ func collide() {
 
 func win() GameState {
   if player.isDead() {
-    fmt.Println("LOSE!")
     return lost
   }
 
@@ -32,6 +29,5 @@ func win() GameState {
     }
   }
 
-  fmt.Println("WIN!")
   return won
 }

@@ -15,9 +15,9 @@ type RGB struct {r,g,b float64}
 
 func clamp(f float64, min, max float64) float64 {
   if f > max {
-    f = max
+    return max
   } else if f < min {
-    f = min
+    return min
   }
   return f
 }
