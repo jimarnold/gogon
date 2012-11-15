@@ -5,7 +5,7 @@ import (
   "github.com/go-gl/gl"
   "github.com/go-gl/glfw"
 )
-type GameState string
+type GameState byte
 
 var gameState GameState
 var elements []Element
@@ -15,10 +15,10 @@ var font Font
 const width float64 = 800
 const height float64 = 600
 var screenCenter Vector = Vector{width/2.0,height/2.0}
-const running GameState = "running"
-const won GameState = "won"
-const lost GameState = "lost"
-const initialized GameState = "initialized"
+const initialized GameState = 0
+const running GameState = 1
+const won GameState = 2
+const lost GameState = 3
 
 func init() {
   gameState = initialized
@@ -27,13 +27,10 @@ func init() {
 func createElements() {
   things := make([]Element, 32)
   for i := range things {
-    aSize := random(5, 9)
-    things[i] = &Thing {
-      location : Vector{random(0,1) * width, random(0,1) * height},
-      direction : Vector{random(-1,1), random(-1,1)},
-      targetSize : aSize,
-      size : aSize,
-    }
+    size := random(5, 9)
+    location := Vector{random(0,1) * width, random(0,1) * height}
+    direction := Vector{random(-1,1), random(-1,1)}
+    things[i] = NewThing(location, direction, size)
   }
   player = &Player{Thing{location : Vector{width / 2, height / 2}, targetSize : 8, size : 8}}
   elements = append(things, player)
@@ -75,7 +72,16 @@ func run(elapsed float64) {
   }
 
   collide()
+  pruneDeadThings()
   gameState = win()
+}
+
+func pruneDeadThings() {
+  for i, e := range elements {
+    if e.isDead() {
+      elements = append(elements[:i], elements[i+1:]...)
+    }
+  }
 }
 
 func waitForReset() {

@@ -1,9 +1,9 @@
 package main
 
 func collide() {
-  for _,a:= range elements {
-    for _,b := range elements {
-      if a == b || (a.isDead() || b.isDead()) {
+  for i,a:= range elements {
+    for j,b := range elements {
+      if j <= i {
         continue
       }
 
@@ -24,7 +24,7 @@ func win() GameState {
   }
 
   for _, e := range elements {
-    if e != player && !e.isDead() {
+    if e != player {
       return running
     }
   }

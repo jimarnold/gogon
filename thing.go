@@ -13,6 +13,7 @@ type Element interface {
   Location() Vector
   getDirection() Vector
   Size() float64
+  boundingBox() Rect
 }
 
 type Thing struct {
@@ -20,6 +21,19 @@ type Thing struct {
   direction Vector
   size float64
   targetSize float64
+}
+
+func NewThing(location, direction Vector, size float64) *Thing {
+  t := Thing{}
+  t.location = location
+  t.direction = direction
+  t.size = size
+  t.targetSize = size
+  return &t
+}
+
+func(this *Thing) boundingBox() Rect {
+  return this.createBoundingBox()
 }
 
 func(this Thing) biggerThan(other Element) bool {
@@ -72,13 +86,25 @@ func wrapped(target Vector) Vector {
 }
 
 func(this *Thing) intersects(other Element) bool {
+  if this.boundingBox().cannotIntersect(other.boundingBox()) {
+    return false
+  }
   distance := this.Location().DistanceTo(other.Location())
   return (this.size + other.Size()) >= distance
 }
 
+func(this *Thing) createBoundingBox() Rect {
+  r := Rect{}
+  r.left = this.location.x - this.size
+  r.top = this.location.y + this.size
+  r.right = r.left + (this.size * 2)
+  r.bottom = r.top - (this.size * 2)
+  return r
+}
+
 func(this *Thing) absorb(other Element) {
   if this.isDead() {
-    return
+    panic("Dead things can't absorb!")
   }
   this.targetSize += other.Size()
   other.die()

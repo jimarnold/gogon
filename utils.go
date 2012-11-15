@@ -21,3 +21,14 @@ func clamp(f float64, min, max float64) float64 {
   }
   return f
 }
+
+type Rect struct {
+  top, bottom, left, right float64
+}
+
+func(this Rect) cannotIntersect(other Rect) bool {
+  if (this.left > other.right || this.right < other.left || this.top < other.bottom || this.bottom > other.top) {
+    return true
+  }
+  return false
+}

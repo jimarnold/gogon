@@ -16,3 +16,13 @@ func drawCircle(location Vector, radius float64, color RGB) {
     }
   gl.End()
 }
+
+func drawRect(rect Rect, color RGB) {
+  gl.Color3d(color.r, color.g, color.b)
+  gl.Begin(gl.LINE_LOOP)
+    gl.Vertex2d(rect.left, rect.top)
+    gl.Vertex2d(rect.right, rect.top)
+    gl.Vertex2d(rect.right, rect.bottom)
+    gl.Vertex2d(rect.left, rect.bottom)
+  gl.End()
+}
