@@ -1,5 +1,4 @@
 package main
-
 func collide() {
   for i,a:= range elements {
     for j,b := range elements {
@@ -24,7 +23,7 @@ func win() GameState {
   }
 
   for _, e := range elements {
-    if e != player {
+    if e != player && !e.isDead() {
       return running
     }
   }

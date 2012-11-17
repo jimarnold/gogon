@@ -21,6 +21,15 @@ const won GameState = 2
 const lost GameState = 3
 
 func init() {
+  var err error
+  font, err = loadFont()
+  if err != nil {
+    fmt.Printf("error loading font: %v", err)
+  }
+
+  initGlfw(int(width),int(height))
+  defer terminateGlfw()
+
   gameState = initialized
 }
 
@@ -32,27 +41,25 @@ func createElements() {
     direction := Vector{random(-1,1), random(-1,1)}
     things[i] = NewThing(location, direction, size)
   }
-  player = &Player{Thing{location : Vector{width / 2, height / 2}, targetSize : 8, size : 8}}
+  player = &Player{Thing{location : Vector{width / 2, height / 2}, targetSize : 10, size : 10}}
   elements = append(things, player)
 }
 
 func main() {
-  initGlfw(int(width),int(height))
-  defer terminateGlfw()
-
-  var err error
-  font, err = loadFont()
-  if err != nil {
-    fmt.Printf("error loading font: %v", err)
-  }
-
   previousFrameTime := glfw.Time()
+  profiler := NewProfiler()
+
   for glfw.WindowParam(glfw.Opened) == 1 {
+    profiler.start()
+
     now := glfw.Time()
     elapsed := now - previousFrameTime
     previousFrameTime = now
     update(elapsed)
     render()
+
+    profiler.stop()
+    profiler.render()
     glfw.SwapBuffers()
   }
 }
@@ -72,16 +79,7 @@ func run(elapsed float64) {
   }
 
   collide()
-  pruneDeadThings()
   gameState = win()
-}
-
-func pruneDeadThings() {
-  for i, e := range elements {
-    if e.isDead() {
-      elements = append(elements[:i], elements[i+1:]...)
-    }
-  }
 }
 
 func waitForReset() {
