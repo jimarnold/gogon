@@ -4,7 +4,7 @@ import (
   "fmt"
   "math"
   //"reflect"
-  "github.com/go-gl/gl"
+  //"github.com/go-gl/gl"
   "github.com/go-gl/glfw"
 )
 type GameState byte
@@ -13,8 +13,8 @@ var gameState GameState
 var elements []Element
 var player *Player
 var font Font
-var program gl.Program
-var attribute_coord2d gl.AttribLocation
+var program Program
+var attribute_coord2d AttribLocation
 
 const width float64 = 800
 const height float64 = 600
@@ -67,6 +67,7 @@ func main() {
   defer free_resources()
   verts = make([]Vector,100)
 
+	const TWO_PI = 2.0 * math.Pi
   sides := len(verts)
   scale := 1.0 / float64(sides)
   for i := 0; i < sides; i++ {
@@ -101,7 +102,7 @@ func main() {
   }
 }
 func init_resources() bool {
-  vs := gl.CreateShader(gl.VERTEX_SHADER)
+  vs := glCreateShader(GL_VERTEX_SHADER)
   vs_source := `#version 120
     attribute vec2 coord2d;
     void main()
@@ -110,13 +111,13 @@ func init_resources() bool {
     }`
   vs.Source(vs_source)
   vs.Compile()
-  compile_ok := vs.Get(gl.COMPILE_STATUS)
+  compile_ok := vs.Get(GL_COMPILE_STATUS)
   if  compile_ok == 0 {
     fmt.Printf("Error in vertex shader\n")
     return false
   }
 
-  fs := gl.CreateShader(gl.FRAGMENT_SHADER)
+  fs := glCreateShader(GL_FRAGMENT_SHADER)
   fs_source := `#version 120
       void main(void) {
         gl_FragColor[0] = 0.0;
@@ -125,17 +126,17 @@ func init_resources() bool {
       }`
   fs.Source(fs_source)
   fs.Compile()
-  compile_ok = fs.Get(gl.COMPILE_STATUS)
+  compile_ok = fs.Get(GL_COMPILE_STATUS)
   if compile_ok == 0 {
     fmt.Printf("Error in fragment shader\n")
     return false
   }
 
-  program = gl.CreateProgram()
+  program = glCreateProgram()
   program.AttachShader(vs)
   program.AttachShader(fs)
   program.Link()
-  link_ok := program.Get(gl.LINK_STATUS)
+  link_ok := program.Get(GL_LINK_STATUS)
   if link_ok == 0 {
     fmt.Printf("glLinkProgram:")
     return false
@@ -169,7 +170,7 @@ func run(elapsed float64) {
     e.update(elapsed)
   }
 
-//  collide()
+  collide()
   gameState = win()
 }
 
@@ -181,8 +182,8 @@ func waitForReset() {
 }
 
 func render() {
-  gl.ClearColor(0.0, 0.0, 0.0, 0)
-  gl.Clear(gl.COLOR_BUFFER_BIT)
+  glClearColor(0.0, 0.0, 0.0, 0)
+  glClear(GL_COLOR_BUFFER_BIT)
 
   switch gameState {
     case running:
@@ -191,7 +192,7 @@ func render() {
       attribute_coord2d.EnableArray()
       attribute_coord2d.AttribPointer(
         2,                 // number of elements per vertex, here (x,y)
-        gl.DOUBLE,          // the type of each element
+        GL_DOUBLE,          // the type of each element
         false,             // take our values as-is
         0,                 // no extra data between each position
         verts)
@@ -200,16 +201,16 @@ func render() {
         if e.isDead() {
           continue
         }
-        location := e.Location()
-        gl.PushMatrix()
-        gl.Translated(location.x, location.y, 0.)
-        gl.Scaled(e.Size(), e.Size(), 0.0)
-        gl.DrawArrays(gl.LINE_LOOP, 0, len(verts))
-        gl.PopMatrix()
+        //location := e.Location()
+        //glPushMatrix()
+        //glTranslated(location.x, location.y, 0.)
+        //glScaled(e.Size(), e.Size(), 0.0)
+        //glDrawArrays(gl.LINE_LOOP, 0, len(verts))
+        //glPopMatrix()
       }
 
       attribute_coord2d.DisableArray()
-      gl.ProgramUnuse()
+      program.Unuse()
     case initialized:
       font.drawString(300, screenCenter.y,"Press Space to play!")
     case won:

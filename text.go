@@ -1,7 +1,6 @@
 package main
 import (
   "github.com/go-gl/gltext"
-  "github.com/go-gl/gl"
   "os"
 )
 
@@ -10,7 +9,6 @@ type Font struct {
 }
 
 func(font Font) drawString(x, y float64, s string) error {
-  gl.Color4f(1, 1, 1, 1)
   return font.Printf(float32(x), float32(y), s)
 }
 

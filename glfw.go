@@ -2,7 +2,7 @@ package main
 
 import "fmt"
 import "os"
-import "github.com/go-gl/gl"
+//import "github.com/go-gl/gl"
 import "github.com/go-gl/glfw"
 
 func initGlfw(width, height int) {
@@ -17,15 +17,14 @@ func initGlfw(width, height int) {
     os.Exit(1)
   }
 
-  if gl.Init() != 0 {
-   fmt.Println("gl error")
-  }
+  //if gl.Init() != 0 {
+   //fmt.Println("gl error")
+  //}
   glfw.SetWindowSizeCallback(onResize)
   glfw.SetKeyCallback(onKey)
   glfw.SetSwapInterval(1)
-  gl.Disable(gl.LIGHTING)
-  gl.Enable(gl.LINE_SMOOTH)
-  gl.LineWidth(2)
+  glEnable(GL_LINE_SMOOTH)
+  glLineWidth(2)
 }
 
 func terminateGlfw() {
@@ -33,12 +32,12 @@ func terminateGlfw() {
 }
 
 func onResize(w, h int) {
-  gl.MatrixMode(gl.PROJECTION)
-  gl.LoadIdentity()
-  gl.Viewport(0, 0, w, h)
-  gl.Ortho(0, float64(w), float64(h), 0, -1, 1)
-  gl.MatrixMode(gl.MODELVIEW)
-  gl.LoadIdentity()
+  //glMatrixMode(gl.PROJECTION)
+  //glLoadIdentity()
+  //glViewport(0, 0, w, h)
+  //glOrtho(0, float64(w), float64(h), 0, -1, 1)
+  //glMatrixMode(gl.MODELVIEW)
+  //glLoadIdentity()
 }
 
 func onKey(key, state int) {
