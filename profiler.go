@@ -2,7 +2,8 @@ package main
 
 import (
   "github.com/go-gl/glfw"
-  "strconv"
+  //"strconv"
+	//"fmt"
 )
 
 type Profiler struct {
@@ -34,7 +35,11 @@ func(this *Profiler) stop() {
 
   this.frame++
 }
-
+var i int = 0
 func(this *Profiler) render() {
-  font.drawString(10,10,strconv.FormatFloat(this.frameSpeed, 'f',10,32))
+	//i++
+	//if i % 32 == 0 {
+		//fmt.Println(strconv.FormatFloat(this.frameSpeed, 'f',10,32))
+	//}
+	//font.drawString(10,10,strconv.FormatFloat(this.frameSpeed, 'f',10,32))
 }

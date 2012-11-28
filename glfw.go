@@ -11,7 +11,8 @@ func initGlfw(width, height int) {
     os.Exit(1)
   }
 
-  glfw.OpenWindowHint(glfw.FsaaSamples, 8)
+  glfw.OpenWindowHint(glfw.OpenGLVersionMajor, 3)
+  glfw.OpenWindowHint(glfw.OpenGLVersionMinor, 2)
   if err := glfw.OpenWindow(width, height, 8, 8, 8, 8, 8, 8, glfw.Windowed); err != nil {
     fmt.Printf("%v\n", err)
     os.Exit(1)
@@ -23,7 +24,6 @@ func initGlfw(width, height int) {
   glfw.SetWindowSizeCallback(onResize)
   glfw.SetKeyCallback(onKey)
   glfw.SetSwapInterval(1)
-  glEnable(GL_LINE_SMOOTH)
   glLineWidth(2)
 }
 
@@ -32,12 +32,7 @@ func terminateGlfw() {
 }
 
 func onResize(w, h int) {
-  //glMatrixMode(gl.PROJECTION)
-  //glLoadIdentity()
-  //glViewport(0, 0, w, h)
-  //glOrtho(0, float64(w), float64(h), 0, -1, 1)
-  //glMatrixMode(gl.MODELVIEW)
-  //glLoadIdentity()
+  glViewport(0, 0, w, h)
 }
 
 func onKey(key, state int) {

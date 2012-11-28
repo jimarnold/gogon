@@ -13,7 +13,9 @@ type GLenum C.GLenum
 type GLbitfield C.GLbitfield
 type Object C.GLuint
 type AttribLocation int
+type UniformLocation int
 type GLclampf C.GLclampf
+type GLfloat C.GLfloat
 
 const (
 	GL_LINE_SMOOTH = C.GL_LINE_SMOOTH
@@ -22,8 +24,29 @@ const (
 	GL_COMPILE_STATUS = C.GL_COMPILE_STATUS
 	GL_LINK_STATUS = C.GL_LINK_STATUS
 	GL_COLOR_BUFFER_BIT = C.GL_COLOR_BUFFER_BIT
+	GL_UNSIGNED_BYTE = C.GL_UNSIGNED_BYTE
 	GL_DOUBLE = C.GL_DOUBLE
+	GL_FLOAT = C.GL_FLOAT
+	GL_ARRAY_BUFFER = C.GL_ARRAY_BUFFER
+	GL_STATIC_DRAW = C.GL_STATIC_DRAW
+	GL_INFO_LOG_LENGTH = C.GL_INFO_LOG_LENGTH
+	GL_LINE_LOOP = C.GL_LINE_LOOP
+	GL_TRIANGLE_STRIP = C.GL_TRIANGLE_STRIP
+	GL_TEXTURE_2D = C.GL_TEXTURE_2D
+	GL_TEXTURE_MIN_FILTER = C.GL_TEXTURE_MIN_FILTER 
+	GL_TEXTURE_MAG_FILTER = C.GL_TEXTURE_MAG_FILTER 
+	GL_LINEAR = C.GL_LINEAR
+	GL_RGBA = C.GL_RGBA
+	GL_FALSE = C.GL_FALSE
+	GL_SMOOTH_LINE_WIDTH_GRANULARITY = C.GL_SMOOTH_LINE_WIDTH_GRANULARITY
+	GL_MAX_DEPTH_TEXTURE_SAMPLES = C.GL_MAX_DEPTH_TEXTURE_SAMPLES
 )
+
+func glGetFloatv(flag GLenum) float32 {
+	var result C.GLfloat
+	C.glGetFloatv(C.GLenum(flag), &result)
+	return float32(result)
+}
 
 func glString(s string) *C.GLchar { return (*C.GLchar)(C.CString(s)) }
 
@@ -79,6 +102,10 @@ func glClearColor(red GLclampf, green GLclampf, blue GLclampf, alpha GLclampf) {
     C.glClearColor(C.GLclampf(red), C.GLclampf(green), C.GLclampf(blue), C.GLclampf(alpha))
 }
 
+func glViewport(x int, y int, width int, height int) {
+	C.glViewport(C.GLint(x), C.GLint(y), C.GLsizei(width), C.GLsizei(height))
+}
+
 type Program Object
 
 func glCreateProgram() Program {
@@ -104,6 +131,14 @@ func (program Program) GetAttribLocation(name string) AttribLocation {
     defer freeString(cname)
 
     return AttribLocation(C.glGetAttribLocation(C.GLuint(program), cname))
+}
+
+func (program Program) GetUniformLocation(name string) UniformLocation {
+
+	cname := glString(name)
+	defer freeString(cname)
+
+	return UniformLocation(C.glGetUniformLocation(C.GLuint(program), cname))
 }
 
 func (program Program) Use() { C.glUseProgram(C.GLuint(program)) }
@@ -138,6 +173,20 @@ func (shader Shader) Get(param GLenum) int {
     return int(rv)
 }
 
+func (shader Shader) GetInfoLog() string {
+	var length C.GLint
+	C.glGetShaderiv(C.GLuint(shader), C.GLenum(GL_INFO_LOG_LENGTH), &length)
+	// length is buffer size including null character
+
+	if length > 1 {
+		log := C.malloc(C.size_t(length))
+		defer C.free(log)
+		C.glGetShaderInfoLog(C.GLuint(shader), C.GLsizei(length), nil, (*C.GLchar)(log))
+		return C.GoString((*C.char)(log))
+	}
+	return ""
+}
+
 func (indx AttribLocation) AttribPointer(size uint, typ GLenum, normalized bool, stride int, pointer interface{}) {
     C.glVertexAttribPointer(C.GLuint(indx), C.GLint(size), C.GLenum(typ),
         glBool(normalized), C.GLsizei(stride), ptr(pointer))
@@ -149,4 +198,93 @@ func (indx AttribLocation) EnableArray() {
 
 func (indx AttribLocation) DisableArray() {
     C.glDisableVertexAttribArray(C.GLuint(indx))
+}
+
+// Uniform
+
+func (location UniformLocation) Uniform1f(x float32) {
+	C.glUniform1f(C.GLint(location), C.GLfloat(x))
+}
+
+func (location UniformLocation) Uniform2f(x float32, y float32) {
+	C.glUniform2f(C.GLint(location), C.GLfloat(x), C.GLfloat(y))
+}
+
+//GLAPI void APIENTRY glUniformMatrix4fv (GLint location, GLsizei count, GLboolean transpose, const GLfloat *value);
+func (location UniformLocation) UniformMatrix4fv(m mat4) {
+	C.glUniformMatrix4fv(C.GLint(location), C.GLsizei(1), GL_FALSE, (*C.GLfloat)(&m[0].x))
+}
+// Vertex Arrays
+type VertexArray Object
+
+func glGenVertexArray() VertexArray {
+	var a C.GLuint
+	C.glGenVertexArrays(1, &a)
+	return VertexArray(a)
+}
+
+func glGenVertexArrays(arrays []VertexArray) {
+	if len(arrays) > 0 {
+		C.glGenVertexArrays(C.GLsizei(len(arrays)), (*C.GLuint)(&arrays[0]))
+	}
+}
+
+func (array VertexArray) Delete() {
+	C.glDeleteVertexArrays(1, (*C.GLuint)(&array))
+}
+
+func (array VertexArray) Bind() {
+	C.glBindVertexArray(C.GLuint(array))
+}
+
+func (array VertexArray) Unbind() {
+	C.glBindVertexArray(C.GLuint(0))
+}
+
+func glDrawArrays(mode GLenum, first int, count int) {
+	C.glDrawArrays(C.GLenum(mode), C.GLint(first), C.GLsizei(count))
+}
+
+//Buffera
+
+type Buffer Object
+
+func glGenBuffer() Buffer {
+	var b C.GLuint
+	C.glGenBuffers(1, &b)
+	return Buffer(b)
+}
+
+func (buffer Buffer) Bind(target GLenum) {
+	C.glBindBuffer(C.GLenum(target), C.GLuint(buffer))
+}
+
+func glBufferData(target GLenum, size int, data interface{}, usage GLenum) {
+	C.glBufferData(C.GLenum(target), C.GLsizeiptr(size), ptr(data), C.GLenum(usage))
+}
+
+
+//Textures
+
+type Texture Object
+
+// Create single texture object
+func glGenTexture() Texture {
+	var b C.GLuint
+	C.glGenTextures(1, &b)
+	return Texture(b)
+}
+
+func (texture Texture) Bind(target GLenum) {
+	C.glBindTexture(C.GLenum(target), C.GLuint(texture))
+}
+
+func glTexParameteri(target GLenum, pname GLenum, param int) {
+	C.glTexParameteri(C.GLenum(target), C.GLenum(pname), C.GLint(param))
+}
+
+func glTexImage2D(target GLenum, level int, internalformat int, width int, height int, border int, format, typ GLenum, pixels interface{}) {
+	C.glTexImage2D(C.GLenum(target), C.GLint(level), C.GLint(internalformat),
+		C.GLsizei(width), C.GLsizei(height), C.GLint(border), C.GLenum(format),
+		C.GLenum(typ), ptr(pixels))
 }
