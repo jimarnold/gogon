@@ -211,7 +211,7 @@ func (location UniformLocation) Uniform2f(x float32, y float32) {
 }
 
 //GLAPI void APIENTRY glUniformMatrix4fv (GLint location, GLsizei count, GLboolean transpose, const GLfloat *value);
-func (location UniformLocation) UniformMatrix4fv(m mat4) {
+func (location UniformLocation) UniformMatrix4fv(m Matrix4x4) {
 	C.glUniformMatrix4fv(C.GLint(location), C.GLsizei(1), GL_FALSE, (*C.GLfloat)(&m[0].x))
 }
 // Vertex Arrays

@@ -23,7 +23,7 @@ var program Program
 var positionAttrib AttribLocation
 var modelToCameraMatrixUniform UniformLocation 
 var vao VertexArray
-var screenCenter Vector = Vector{width/2.0,height/2.0}
+var screenCenter Vector2 = Vector2{width/2.0,height/2.0}
 
 func init() {
   initGlfw(int(width),int(height))
@@ -34,11 +34,11 @@ func createElements() {
   things := make([]Element, 32)
   for i := range things {
     size := random(5, 9)
-    location := Vector{random(0,1) * width, random(0,1) * height}
-    direction := Vector{random(-1,1), random(-1,1)}
+    location := Vector2{random(0,1) * width, random(0,1) * height}
+    direction := Vector2{random(-1,1), random(-1,1)}
     things[i] = NewThing(location, direction, size)
   }
-  player = &Player{Thing{location : Vector{width / 2, height / 2}, targetSize : 10, size : 10}}
+  player = &Player{Thing{location : Vector2{width / 2, height / 2}, targetSize : 10, size : 10}}
   elements = append(things, player)
 }
 
@@ -63,19 +63,19 @@ func init_resources() bool {
 	vao = glGenVertexArray()
 	vao.Bind()
 
-	verts := make([]vec4,100)
+	verts := make([]Vector4,100)
 
 	sides := len(verts)
 	vert_scale := 1.0 / float64(sides)
 	TWO_PI := math.Pi * 2.0
 	for i := 0; i < sides; i++ {
 		angle := float64(i) * TWO_PI * vert_scale
-		verts[i] = vec4{float32(math.Cos(angle)), float32(math.Sin(angle)),0,1}
+		verts[i] = Vector4{float32(math.Cos(angle)), float32(math.Sin(angle)),0,1}
 	}
 
 	vbo := glGenBuffer()
 	vbo.Bind(GL_ARRAY_BUFFER)
-	glBufferData(GL_ARRAY_BUFFER, int(reflect.TypeOf(vec4{}).Size()) * len(verts), verts, GL_STATIC_DRAW)
+	glBufferData(GL_ARRAY_BUFFER, int(reflect.TypeOf(Vector4{}).Size()) * len(verts), verts, GL_STATIC_DRAW)
 
 	vs_source := `#version 150
     in vec4 position;
@@ -130,7 +130,7 @@ func init_resources() bool {
 	zNear := 1.0
 	zFar := 45.0
 	frustumScale := float32(CalcFrustumScale(45.0))
-	cameraToClipMatrix := Newmat4(0.0)
+	cameraToClipMatrix := NewMatrix4x4(0.0)
     cameraToClipMatrix[0].x = frustumScale
     cameraToClipMatrix[1].y = frustumScale
     cameraToClipMatrix[2].z = float32((zFar + zNear) / (zNear - zFar))
@@ -192,15 +192,15 @@ func render() {
 					continue
 				}
 				location := e.Location()
-				translateMatrix := Newmat4(1.0)
-				translateMatrix[3] = vec4{float32((location.x/width) - 0.5), -float32((location.y/height) - 0.5), -1, 1}
+				translateMatrix := NewMatrix4x4(1.0)
+				translateMatrix[3] = Vector4{float32((location.x/width) - 0.5), -float32((location.y/height) - 0.5), -1, 1}
 				
-				theScale := vec4{float32((1.0 / width)*e.Size()), float32((1.0 / height)*e.Size()), 1, 1}
-				scaleMatrix := Newmat4(1.0)
+				theScale := Vector4{float32((1.0 / width)*e.Size()), float32((1.0 / height)*e.Size()), 1, 1}
+				scaleMatrix := NewMatrix4x4(1.0)
 				scaleMatrix[0].x = theScale.x
 				scaleMatrix[1].y = theScale.y
 				scaleMatrix[2].z = theScale.z
-				scaleMatrix[3] = vec4{0.0,0.0,0.0, 1.0}
+				scaleMatrix[3] = Vector4{0.0,0.0,0.0, 1.0}
 				modelToCameraMatrix := translateMatrix.mult(scaleMatrix)
 				modelToCameraMatrixUniform.UniformMatrix4fv(modelToCameraMatrix)
 				glDrawArrays(GL_LINE_LOOP, 0, 100)

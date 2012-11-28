@@ -28,22 +28,22 @@ func (this *Player) update(elapsed float64) {
 }
 
 func up() {
-  player.thrust(Vector{0,-speed})
+  player.thrust(Vector2{0,-speed})
 }
 
 func down() {
-  player.thrust(Vector{0,speed})
+  player.thrust(Vector2{0,speed})
 }
 
 func left() {
-  player.thrust(Vector{-speed,0})
+  player.thrust(Vector2{-speed,0})
 }
 
 func right() {
-  player.thrust(Vector{speed,0})
+  player.thrust(Vector2{speed,0})
 }
 
-func(this *Player) thrust(v Vector) {
+func(this *Player) thrust(v Vector2) {
   this.direction = this.direction.Add(v).clampedTo(maxSpeed)
 }
 

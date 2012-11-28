@@ -10,19 +10,19 @@ type Element interface {
   biggerThan(other Element) bool
   die()
   isDead() bool
-  Location() Vector
-  getDirection() Vector
+  Location() Vector2
+  getDirection() Vector2
   Size() float64
 }
 
 type Thing struct {
-  location Vector
-  direction Vector
+  location Vector2
+  direction Vector2
   size float64
   targetSize float64
 }
 
-func NewThing(location, direction Vector, size float64) *Thing {
+func NewThing(location, direction Vector2, size float64) *Thing {
   return &Thing{location, direction, size, size}
 }
 
@@ -38,11 +38,11 @@ func(this Thing) isDead() bool {
   return this.size == 0
 }
 
-func(this Thing) Location() Vector {
+func(this Thing) Location() Vector2 {
   return this.location
 }
 
-func(this Thing) getDirection() Vector {
+func(this Thing) getDirection() Vector2 {
   return this.direction
 }
 
@@ -58,10 +58,10 @@ func(this *Thing) update(elapsed float64) {
 
   x := this.location.x + (elapsed * this.direction.x * 100)
   y := this.location.y + (elapsed * this.direction.y * 100)
-  this.location = wrapped(Vector{x,y})
+  this.location = wrapped(Vector2{x,y})
 }
 
-func wrapped(target Vector) Vector {
+func wrapped(target Vector2) Vector2 {
   wrap := func (i float64, min float64, max float64) float64 {
     result := i
     if result > max {
@@ -72,7 +72,7 @@ func wrapped(target Vector) Vector {
     }
     return result
   }
-  return Vector{wrap(target.x, 0, width), wrap(target.y, 0, height)}
+  return Vector2{wrap(target.x, 0, width), wrap(target.y, 0, height)}
 }
 
 func(this *Thing) intersects(other Element) bool {
