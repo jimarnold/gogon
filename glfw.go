@@ -2,7 +2,6 @@ package main
 
 import "fmt"
 import "os"
-//import "github.com/go-gl/gl"
 import "github.com/go-gl/glfw"
 
 func initGlfw(width, height int) {
@@ -18,9 +17,9 @@ func initGlfw(width, height int) {
     os.Exit(1)
   }
 
-  //if gl.Init() != 0 {
-   //fmt.Println("gl error")
-  //}
+  if glInit() != 0 {
+   fmt.Println("gl error")
+  }
   glfw.SetWindowSizeCallback(onResize)
   glfw.SetKeyCallback(onKey)
   glfw.SetSwapInterval(1)
@@ -47,16 +46,3 @@ const KeyD int = 68
 const KeyW int = 87
 const KeySpace int = 32
 
-type KeyAction func()
-
-func handleKeys(keyActions map[int] KeyAction) {
-  for key,action := range keyActions {
-    if(glfw.Key(key) == 1) {
-      action()
-    }
-  }
-}
-
-func keyDown(key int) bool {
-  return glfw.Key(key) == 1
-}

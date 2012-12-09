@@ -7,6 +7,17 @@ import (
 	"github.com/go-gl/glfw"
 )
 
+type Game struct {
+	gameState GameState
+	elements []Element
+	player *Player
+	program Program
+	positionAttrib AttribLocation
+	modelToCameraMatrixUniform, colorUniform UniformLocation 
+	vao VertexArray
+	text TextRenderer
+}
+
 type GameState byte
 
 const width float64 = 800
@@ -16,20 +27,6 @@ const running GameState = 1
 const won GameState = 2
 const lost GameState = 3
 
-var gameState GameState
-var elements []Element
-var player *Player
-var program Program
-var positionAttrib AttribLocation
-var modelToCameraMatrixUniform UniformLocation 
-var vao VertexArray
-var screenCenter Vector2 = Vector2{width/2.0,height/2.0}
-
-func init() {
-  initGlfw(int(width),int(height))
-  gameState = initialized
-}
-
 func createElements() {
   things := make([]Element, 32)
   for i := range things {
@@ -38,11 +35,17 @@ func createElements() {
     direction := Vector2{random(-1,1), random(-1,1)}
     things[i] = NewThing(location, direction, size)
   }
-  player = &Player{Thing{location : Vector2{width / 2, height / 2}, targetSize : 10, size : 10}}
-  elements = append(things, player)
+  game.player = &Player{Thing{location : Vector2{width / 2, height / 2}, targetSize : 10, size : 10}}
+  game.elements = append(things, game.player)
 }
 
+var game Game
+
 func main() {
+	game = Game {}
+  initGlfw(int(width),int(height))
+	game.text = NewTextRenderer("./PixelCarnageMono.ttf", 18, 64)
+  game.gameState = initialized
   defer terminateGlfw()
   previousFrameTime := glfw.Time()
 
@@ -60,7 +63,37 @@ func main() {
 }
 
 func init_resources() bool {
-	vao = glGenVertexArray()
+
+	vs, err := NewShader(GL_VERTEX_SHADER, `#version 150
+    in vec4 position;
+	uniform mat4 cameraToClipMatrix;
+	uniform mat4 modelToCameraMatrix;	
+    void main()
+    {
+		vec4 cameraPos = modelToCameraMatrix * position;
+    	gl_Position = cameraToClipMatrix * cameraPos;
+    }`)
+
+	if err != nil {
+		log.Printf("Error compiling vertex shader\n")
+		log.Println(err)
+	}
+
+	fs, err := NewShader(GL_FRAGMENT_SHADER, `#version 150
+		uniform vec4 color;
+      out vec4 outputF;
+      void main(void) {
+        outputF = color;
+      }`)
+
+	if err != nil {
+		log.Printf("Error compiling fragment shader\n")
+		log.Println(err)
+	}
+
+	program := NewProgram(vs, fs)
+
+	vao := glGenVertexArray()
 	vao.Bind()
 
 	verts := make([]Vector4,100)
@@ -77,55 +110,13 @@ func init_resources() bool {
 	vbo.Bind(GL_ARRAY_BUFFER)
 	glBufferData(GL_ARRAY_BUFFER, int(reflect.TypeOf(Vector4{}).Size()) * len(verts), verts, GL_STATIC_DRAW)
 
-	vs_source := `#version 150
-    in vec4 position;
-	uniform mat4 cameraToClipMatrix;
-	uniform mat4 modelToCameraMatrix;	
-    void main()
-    {
-		vec4 cameraPos = modelToCameraMatrix * position;
-    	gl_Position = cameraToClipMatrix * cameraPos;
-    }`
-	vs := glCreateShader(GL_VERTEX_SHADER)
-	vs.Source(vs_source)
-	vs.Compile()
-	compile_ok := vs.Get(GL_COMPILE_STATUS)
-	if  compile_ok == 0 {
-		log.Printf("Error in vertex shader\n")
-		log.Println(vs.GetInfoLog())
-		return false
-	}
-
-	fs := glCreateShader(GL_FRAGMENT_SHADER)
-	fs_source := `#version 150
-      out vec4 outputF;
-      void main(void) {
-        outputF = vec4(1.0,0.0,1.0,0.5);
-      }`
-	fs.Source(fs_source)
-	fs.Compile()
-	compile_ok = fs.Get(GL_COMPILE_STATUS)
-	if compile_ok == 0 {
-		log.Printf("Error in fragment shader\n")
-		return false
-	}
-
-	program = glCreateProgram()
-	program.AttachShader(vs)
-	program.AttachShader(fs)
-	program.Link()
-	link_ok := program.Get(GL_LINK_STATUS)
-	if link_ok == 0 {
-		log.Printf("glLinkProgram:")
-		return false
-	}
-
 	positionAttrib := program.GetAttribLocation("position")
 	positionAttrib.AttribPointer(4, GL_FLOAT, false, 0, nil)
 	positionAttrib.EnableArray()
 
 	cameraToClipMatrixUniform := program.GetUniformLocation("cameraToClipMatrix")
-	modelToCameraMatrixUniform = program.GetUniformLocation("modelToCameraMatrix")
+	modelToCameraMatrixUniform := program.GetUniformLocation("modelToCameraMatrix")
+	colorUniform := program.GetUniformLocation("color")
 
 	zNear := 1.0
 	zFar := 45.0
@@ -140,7 +131,12 @@ func init_resources() bool {
 	program.Use()
 	cameraToClipMatrixUniform.UniformMatrix4fv(cameraToClipMatrix)
 	program.Unuse()
+	vbo.Unbind(GL_ARRAY_BUFFER)
 	vao.Unbind()
+	game.program = program
+	game.vao = vao
+	game.modelToCameraMatrixUniform = modelToCameraMatrixUniform
+	game.colorUniform = colorUniform
 	return true
 }
 
@@ -152,11 +148,11 @@ func CalcFrustumScale(fovDeg float64) float64 {
 
 
 func free_resources() {
-  program.Delete()
+  game.program.Delete()
 }
 
 func update(elapsed float64) {
-  switch gameState {
+  switch game.gameState {
     case running:
       run(elapsed)
     case initialized, won, lost:
@@ -165,29 +161,31 @@ func update(elapsed float64) {
 }
 
 func run(elapsed float64) {
-  for _,e := range elements {
+  for _,e := range game.elements {
     e.update(elapsed)
   }
 
-  collide()
-  gameState = win()
+  game.collide()
+  game.win()
 }
 
 func waitForReset() {
   if keyDown(KeySpace) {
     createElements()
-    gameState = running
+    game.gameState = running
   }
 }
 
 func render() {
 	glClearColor(0.0, 0.0, 0.0, 0)
 	glClear(GL_COLOR_BUFFER_BIT)
-	switch gameState {
-		case running, initialized:
-			program.Use()
-			vao.Bind()	
-			for _, e := range elements {
+	switch game.gameState {
+		case initialized:
+			game.text.Draw("Hit space to play!", Vector4{0.75,-1,0,0}, Vector4{1,1,1,1})
+		case running:
+			game.program.Use()
+			game.vao.Bind()	
+			for _, e := range game.elements {
 				if e.isDead() {
 					continue
 				}
@@ -202,13 +200,23 @@ func render() {
 				scaleMatrix[2].z = theScale.z
 				scaleMatrix[3] = Vector4{0.0,0.0,0.0, 1.0}
 				modelToCameraMatrix := translateMatrix.mult(scaleMatrix)
-				modelToCameraMatrixUniform.UniformMatrix4fv(modelToCameraMatrix)
+				game.modelToCameraMatrixUniform.UniformMatrix4fv(modelToCameraMatrix)
+
+				if e == game.player {
+					game.colorUniform.Uniform4fv(Vector4{0,0,1,1})
+				} else if e.biggerThan(game.player) {
+					game.colorUniform.Uniform4fv(Vector4{1,0,0,1})
+				} else {
+					game.colorUniform.Uniform4fv(Vector4{0,1,0,1})
+				}
 				glDrawArrays(GL_LINE_LOOP, 0, 100)
 			}
-			vao.Unbind()
-			program.Unuse()
+			game.vao.Unbind()
+			game.program.Unuse()
 		case won:
+			game.text.Draw("You won! Hit space to play again.", Vector4{0.75,-1,0,0}, Vector4{1,1,1,1})
 		case lost:
+			game.text.Draw("You lost! Hit space to play again.", Vector4{0.5,-1,0,0}, Vector4{1,1,1,1})
 	}
 }
 

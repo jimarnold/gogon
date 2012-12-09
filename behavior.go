@@ -1,7 +1,8 @@
 package main
-func collide() {
-  for i,a:= range elements {
-    for j,b := range elements {
+
+func(game *Game) collide() {
+  for i,a:= range game.elements {
+    for j,b := range game.elements {
       if j <= i {
         continue
       }
@@ -17,16 +18,17 @@ func collide() {
   }
 }
 
-func win() GameState {
-  if player.isDead() {
-    return lost
+func(game *Game) win() {
+  if game.player.isDead() {
+    game.gameState = lost
+	return
   }
 
-  for _, e := range elements {
-    if e != player && !e.isDead() {
-      return running
+  for _, e := range game.elements {
+    if e != game.player && !e.isDead() {
+      game.gameState = running
+		return
     }
   }
-
-  return won
+  game.gameState = won
 }

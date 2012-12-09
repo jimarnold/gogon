@@ -1,10 +1,9 @@
 package main
 
-// #cgo darwin LDFLAGS: -framework OpenGL
-//#include <stdlib.h>
-//#include <OpenGL/gl3.h>
-//#include <OpenGL/gl3ext.h>
-//#include <OpenGL/OpenGL.h>
+// #cgo darwin LDFLAGS: -framework OpenGL -lGLEW
+// #cgo windows LDFLAGS: -lglew32 -lopengl32
+// #cgo linux LDFLAGS: -lGLEW -lGL
+// #include "gl.h"
 import "C"
 import "unsafe"
 import "reflect"
@@ -18,29 +17,43 @@ type GLclampf C.GLclampf
 type GLfloat C.GLfloat
 
 const (
-	GL_LINE_SMOOTH = C.GL_LINE_SMOOTH
-	GL_VERTEX_SHADER = C.GL_VERTEX_SHADER
-	GL_FRAGMENT_SHADER = C.GL_FRAGMENT_SHADER
-	GL_COMPILE_STATUS = C.GL_COMPILE_STATUS
-	GL_LINK_STATUS = C.GL_LINK_STATUS
-	GL_COLOR_BUFFER_BIT = C.GL_COLOR_BUFFER_BIT
-	GL_UNSIGNED_BYTE = C.GL_UNSIGNED_BYTE
-	GL_DOUBLE = C.GL_DOUBLE
-	GL_FLOAT = C.GL_FLOAT
-	GL_ARRAY_BUFFER = C.GL_ARRAY_BUFFER
-	GL_STATIC_DRAW = C.GL_STATIC_DRAW
-	GL_INFO_LOG_LENGTH = C.GL_INFO_LOG_LENGTH
-	GL_LINE_LOOP = C.GL_LINE_LOOP
-	GL_TRIANGLE_STRIP = C.GL_TRIANGLE_STRIP
-	GL_TEXTURE_2D = C.GL_TEXTURE_2D
-	GL_TEXTURE_MIN_FILTER = C.GL_TEXTURE_MIN_FILTER 
-	GL_TEXTURE_MAG_FILTER = C.GL_TEXTURE_MAG_FILTER 
-	GL_LINEAR = C.GL_LINEAR
-	GL_RGBA = C.GL_RGBA
-	GL_FALSE = C.GL_FALSE
+	GL_LINE_SMOOTH                   = C.GL_LINE_SMOOTH
+	GL_VERTEX_SHADER                 = C.GL_VERTEX_SHADER
+	GL_FRAGMENT_SHADER               = C.GL_FRAGMENT_SHADER
+	GL_COMPILE_STATUS                = C.GL_COMPILE_STATUS
+	GL_LINK_STATUS                   = C.GL_LINK_STATUS
+	GL_COLOR_BUFFER_BIT              = C.GL_COLOR_BUFFER_BIT
+	GL_UNSIGNED_BYTE                 = C.GL_UNSIGNED_BYTE
+	GL_DOUBLE                        = C.GL_DOUBLE
+	GL_FLOAT                         = C.GL_FLOAT
+	GL_ARRAY_BUFFER                  = C.GL_ARRAY_BUFFER
+	GL_STATIC_DRAW                   = C.GL_STATIC_DRAW
+	GL_DYNAMIC_DRAW                  = C.GL_DYNAMIC_DRAW
+	GL_INFO_LOG_LENGTH               = C.GL_INFO_LOG_LENGTH
+	GL_TRIANGLES                     = C.GL_TRIANGLES
+	GL_LINE_LOOP                     = C.GL_LINE_LOOP
+	GL_TRIANGLE_STRIP                = C.GL_TRIANGLE_STRIP
+	GL_TEXTURE0                      = C.GL_TEXTURE0
+	GL_TEXTURE_2D                    = C.GL_TEXTURE_2D
+	GL_TEXTURE_MIN_FILTER            = C.GL_TEXTURE_MIN_FILTER
+	GL_TEXTURE_MAG_FILTER            = C.GL_TEXTURE_MAG_FILTER
+	GL_TEXTURE_WRAP_S                = C.GL_TEXTURE_WRAP_S
+	GL_TEXTURE_WRAP_T                = C.GL_TEXTURE_WRAP_T
+	GL_CLAMP_TO_EDGE                 = C.GL_CLAMP_TO_EDGE
+	GL_UNPACK_ALIGNMENT              = C.GL_UNPACK_ALIGNMENT
+	GL_LINEAR                        = C.GL_LINEAR
+	GL_RGBA                          = C.GL_RGBA
+	GL_ALPHA                         = C.GL_ALPHA
+	GL_FALSE                         = C.GL_FALSE
 	GL_SMOOTH_LINE_WIDTH_GRANULARITY = C.GL_SMOOTH_LINE_WIDTH_GRANULARITY
-	GL_MAX_DEPTH_TEXTURE_SAMPLES = C.GL_MAX_DEPTH_TEXTURE_SAMPLES
+	GL_MAX_DEPTH_TEXTURE_SAMPLES     = C.GL_MAX_DEPTH_TEXTURE_SAMPLES
+	GL_SRC_ALPHA                     = C.GL_SRC_ALPHA
+	GL_BLEND                         = C.GL_BLEND
+	GL_ONE_MINUS_SRC_ALPHA           = C.GL_ONE_MINUS_SRC_ALPHA
 )
+func glGetError() GLenum {
+	return  GLenum(C.glGetError())
+}
 
 func glGetFloatv(flag GLenum) float32 {
 	var result C.GLfloat
@@ -55,7 +68,7 @@ func freeString(ptr *C.GLchar) { C.free(unsafe.Pointer(ptr)) }
 func glBool(v bool) C.GLboolean {
 	if v {
 		return 1
-	}			
+	}
 	return 0
 }
 
@@ -91,7 +104,7 @@ func glDisable(cap GLenum) {
 }
 
 func glLineWidth(width float32) {
-    C.glLineWidth(C.GLfloat(width))
+	C.glLineWidth(C.GLfloat(width))
 }
 
 func glClear(mask GLbitfield) {
@@ -99,11 +112,15 @@ func glClear(mask GLbitfield) {
 }
 
 func glClearColor(red GLclampf, green GLclampf, blue GLclampf, alpha GLclampf) {
-    C.glClearColor(C.GLclampf(red), C.GLclampf(green), C.GLclampf(blue), C.GLclampf(alpha))
+	C.glClearColor(C.GLclampf(red), C.GLclampf(green), C.GLclampf(blue), C.GLclampf(alpha))
 }
 
 func glViewport(x int, y int, width int, height int) {
 	C.glViewport(C.GLint(x), C.GLint(y), C.GLsizei(width), C.GLsizei(height))
+}
+
+func glBlendFunc(sfactor GLenum, dfactor GLenum) {
+	C.glBlendFunc(C.GLenum(sfactor), C.GLenum(dfactor))
 }
 
 type Program Object
@@ -112,25 +129,25 @@ func glCreateProgram() Program {
 	return Program(C.glCreateProgram())
 }
 
-func(program Program) AttachShader(shader Shader) {
+func (program Program) AttachShader(shader Shader) {
 	C.glAttachShader(C.GLuint(program), C.GLuint(shader))
 }
 
 func (program Program) Link() { C.glLinkProgram(C.GLuint(program)) }
 
 func (program Program) Get(param GLenum) int {
-    var rv C.GLint
+	var rv C.GLint
 
-    C.glGetProgramiv(C.GLuint(program), C.GLenum(param), &rv)
-    return int(rv)
+	C.glGetProgramiv(C.GLuint(program), C.GLenum(param), &rv)
+	return int(rv)
 }
 
 func (program Program) GetAttribLocation(name string) AttribLocation {
 
-    cname := glString(name)
-    defer freeString(cname)
+	cname := glString(name)
+	defer freeString(cname)
 
-    return AttribLocation(C.glGetAttribLocation(C.GLuint(program), cname))
+	return AttribLocation(C.glGetAttribLocation(C.GLuint(program), cname))
 }
 
 func (program Program) GetUniformLocation(name string) UniformLocation {
@@ -155,22 +172,22 @@ func glCreateShader(shaderType GLenum) Shader {
 	return Shader(C.glCreateShader(C.GLenum(shaderType)))
 }
 
-func(shader Shader) Source(source string) {
+func (shader Shader) Source(source string) {
 	csource := glString(source)
-    defer freeString(csource)
+	defer freeString(csource)
 
-    var one C.GLint = C.GLint(len(source))
+	var one C.GLint = C.GLint(len(source))
 
-    C.glShaderSource(C.GLuint(shader), 1, &csource, &one)
+	C.glShaderSource(C.GLuint(shader), 1, &csource, &one)
 }
 
 func (shader Shader) Compile() { C.glCompileShader(C.GLuint(shader)) }
 
 func (shader Shader) Get(param GLenum) int {
-    var rv C.GLint
+	var rv C.GLint
 
-    C.glGetShaderiv(C.GLuint(shader), C.GLenum(param), &rv)
-    return int(rv)
+	C.glGetShaderiv(C.GLuint(shader), C.GLenum(param), &rv)
+	return int(rv)
 }
 
 func (shader Shader) GetInfoLog() string {
@@ -187,17 +204,21 @@ func (shader Shader) GetInfoLog() string {
 	return ""
 }
 
+func (shader Shader) Delete() {
+	C.glDeleteShader(C.GLuint(shader))
+}
+
 func (indx AttribLocation) AttribPointer(size uint, typ GLenum, normalized bool, stride int, pointer interface{}) {
-    C.glVertexAttribPointer(C.GLuint(indx), C.GLint(size), C.GLenum(typ),
-        glBool(normalized), C.GLsizei(stride), ptr(pointer))
+	C.glVertexAttribPointer(C.GLuint(indx), C.GLint(size), C.GLenum(typ),
+		glBool(normalized), C.GLsizei(stride), ptr(pointer))
 }
 
 func (indx AttribLocation) EnableArray() {
-    C.glEnableVertexAttribArray(C.GLuint(indx))
+	C.glEnableVertexAttribArray(C.GLuint(indx))
 }
 
 func (indx AttribLocation) DisableArray() {
-    C.glDisableVertexAttribArray(C.GLuint(indx))
+	C.glDisableVertexAttribArray(C.GLuint(indx))
 }
 
 // Uniform
@@ -206,14 +227,23 @@ func (location UniformLocation) Uniform1f(x float32) {
 	C.glUniform1f(C.GLint(location), C.GLfloat(x))
 }
 
+func (location UniformLocation) Uniform1i(x int) {
+	C.glUniform1i(C.GLint(location), C.GLint(x))
+}
+
 func (location UniformLocation) Uniform2f(x float32, y float32) {
 	C.glUniform2f(C.GLint(location), C.GLfloat(x), C.GLfloat(y))
+}
+
+func (location UniformLocation) Uniform4fv(v Vector4) {
+	C.glUniform4fv(C.GLint(location), C.GLsizei(1), (*C.GLfloat)(&v.x))
 }
 
 //GLAPI void APIENTRY glUniformMatrix4fv (GLint location, GLsizei count, GLboolean transpose, const GLfloat *value);
 func (location UniformLocation) UniformMatrix4fv(m Matrix4x4) {
 	C.glUniformMatrix4fv(C.GLint(location), C.GLsizei(1), GL_FALSE, (*C.GLfloat)(&m[0].x))
 }
+
 // Vertex Arrays
 type VertexArray Object
 
@@ -262,8 +292,12 @@ func (buffer Buffer) Bind(target GLenum) {
 func glBufferData(target GLenum, size int, data interface{}, usage GLenum) {
 	C.glBufferData(C.GLenum(target), C.GLsizeiptr(size), ptr(data), C.GLenum(usage))
 }
-
-
+func (buffer Buffer) Unbind(target GLenum) {
+	C.glBindBuffer(C.GLenum(target), C.GLuint(0))
+}
+func (buffer Buffer) Delete() {
+	C.glDeleteBuffers(1, (*C.GLuint)(&buffer))
+}
 //Textures
 
 type Texture Object
@@ -287,4 +321,14 @@ func glTexImage2D(target GLenum, level int, internalformat int, width int, heigh
 	C.glTexImage2D(C.GLenum(target), C.GLint(level), C.GLint(internalformat),
 		C.GLsizei(width), C.GLsizei(height), C.GLint(border), C.GLenum(format),
 		C.GLenum(typ), ptr(pixels))
+}
+
+func glActiveTexture(texture GLenum) { C.glActiveTexture(C.GLenum(texture)) }
+
+func glPixelStorei(pname GLenum, param int) {
+	C.glPixelStorei(C.GLenum(pname), C.GLint(param))
+}
+
+func glInit() GLenum {
+	return GLenum(C.goglInit())
 }
