@@ -31,11 +31,11 @@ func (this *Player) update(elapsed float64) {
 }
 
 func(this *Player) up() {
-  this.thrust(Vector2{0,-speed})
+  this.thrust(Vector2{0,speed})
 }
 
 func(this *Player) down() {
-  this.thrust(Vector2{0,speed})
+  this.thrust(Vector2{0,-speed})
 }
 
 func(this *Player) left() {

@@ -121,15 +121,9 @@ func init_resources() bool {
 	modelToCameraMatrixUniform := program.GetUniformLocation("modelToCameraMatrix")
 	colorUniform := program.GetUniformLocation("color")
 
-	zNear := 1.0
-	zFar := 45.0
-	frustumScale := float32(CalcFrustumScale(45.0))
-	cameraToClipMatrix := NewMatrix4x4(0.0)
-    cameraToClipMatrix[0].x = frustumScale
-    cameraToClipMatrix[1].y = frustumScale
-    cameraToClipMatrix[2].z = float32((zFar + zNear) / (zNear - zFar))
-    cameraToClipMatrix[2].w = -1.0
-    cameraToClipMatrix[3].z = float32((2 * zFar * zNear) / (zNear - zFar))
+	zNear := float32(0.0)
+	zFar := float32(45.0)
+	cameraToClipMatrix := ortho(0, float32(width), 0, float32(height), zNear, zFar)
 
 	program.Use()
 	cameraToClipMatrixUniform.UniformMatrix4fv(cameraToClipMatrix)
@@ -142,12 +136,16 @@ func init_resources() bool {
 	return true
 }
 
-func CalcFrustumScale(fovDeg float64) float64 {
-    const degToRad = 3.14159 * 2.0 / 360.0
-    fovRad := fovDeg * degToRad
-    return 1.0 / math.Tan(fovRad / 2.0)
+func ortho(left, right, bottom, top, zNear, zFar float32) Matrix4x4 {
+	result := NewMatrix4x4(1.0)
+	result[0].x = float32(2.0) / (right - left)
+	result[1].y = float32(2.0) / (top - bottom)
+	result[2].z = float32(-2.0) / (zFar - zNear)
+	result[3].x = -(right + left) / (right - left)
+	result[3].y = -(top + bottom) / (top - bottom)
+	result[3].z = -(zFar + zNear) / (zFar - zNear)
+	return result
 }
-
 
 func free_resources() {
   game.program.Delete()
@@ -192,16 +190,26 @@ func render() {
 					continue
 				}
 				location := e.Location()
-				translateMatrix := NewMatrix4x4(1.0)
-				translateMatrix[3] = Vector4{float32((location.x/width) - 0.5), -float32((location.y/height) - 0.5), -1, 1}
+				//translateMatrix := NewMatrix4x4(1.0)
+				//translateMatrix[3] = Vector4{float32((location.x/width) - 0.5), -float32((location.y/height) - 0.5), -1, 1}
 				
-				theScale := Vector4{float32((1.0 / width)*e.Size()), float32((1.0 / height)*e.Size()), 1, 1}
-				scaleMatrix := NewMatrix4x4(1.0)
-				scaleMatrix[0].x = theScale.x
-				scaleMatrix[1].y = theScale.y
-				scaleMatrix[2].z = theScale.z
-				scaleMatrix[3] = Vector4{0.0,0.0,0.0, 1.0}
-				modelToCameraMatrix := translateMatrix.mult(scaleMatrix)
+        theScale := Vector4{float32(e.Size()), float32(e.Size()), 1, 1}
+				//scaleMatrix := NewMatrix4x4(1.0)
+				//scaleMatrix[0].x = theScale.x
+				//scaleMatrix[1].y = theScale.y
+				//scaleMatrix[2].z = theScale.z
+				//scaleMatrix[3] = Vector4{0.0,0.0,0.0, 1.0}
+				//modelToCameraMatrix := translateMatrix.mult(scaleMatrix)
+        
+
+	translateMatrix := NewMatrix4x4(1.0)
+	translateMatrix[3] = Vector4{float32(location.x), float32(location.y), -1, 1}
+	scaleMatrix := NewMatrix4x4(1.0)
+	scaleMatrix[0].x = theScale.x
+	scaleMatrix[1].y = theScale.y
+	modelToCameraMatrix := translateMatrix.mult(scaleMatrix)
+
+
 				game.modelToCameraMatrixUniform.UniformMatrix4fv(modelToCameraMatrix)
 
 				if e == game.player {
