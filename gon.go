@@ -93,9 +93,6 @@ func init_resources() bool {
 
 	program := NewProgram(vs, fs)
 
-	vao := glGenVertexArray()
-	vao.Bind()
-
 	verts := make([]Vector4,100)
 
 	sides := len(verts)
@@ -106,6 +103,9 @@ func init_resources() bool {
 		verts[i] = Vector4{float32(math.Cos(angle)), float32(math.Sin(angle)),0,1}
 	}
 
+	vao := glGenVertexArray()
+	vao.Bind()
+
 	vbo := glGenBuffer()
 	vbo.Bind(GL_ARRAY_BUFFER)
 	glBufferData(GL_ARRAY_BUFFER, int(reflect.TypeOf(Vector4{}).Size()) * len(verts), verts, GL_STATIC_DRAW)
@@ -113,6 +113,9 @@ func init_resources() bool {
 	positionAttrib := program.GetAttribLocation("position")
 	positionAttrib.AttribPointer(4, GL_FLOAT, false, 0, nil)
 	positionAttrib.EnableArray()
+
+	vbo.Unbind(GL_ARRAY_BUFFER)
+	vao.Unbind()
 
 	cameraToClipMatrixUniform := program.GetUniformLocation("cameraToClipMatrix")
 	modelToCameraMatrixUniform := program.GetUniformLocation("modelToCameraMatrix")
@@ -131,8 +134,7 @@ func init_resources() bool {
 	program.Use()
 	cameraToClipMatrixUniform.UniformMatrix4fv(cameraToClipMatrix)
 	program.Unuse()
-	vbo.Unbind(GL_ARRAY_BUFFER)
-	vao.Unbind()
+
 	game.program = program
 	game.vao = vao
 	game.modelToCameraMatrixUniform = modelToCameraMatrixUniform
