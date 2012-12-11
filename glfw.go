@@ -4,12 +4,14 @@ import "fmt"
 import "os"
 import "github.com/go-gl/glfw"
 
-func initGlfw(width, height int) {
+func initGlfw() {
   if err := glfw.Init(); err != nil {
     fmt.Printf("%v\n", err)
     os.Exit(1)
   }
+}
 
+func createWindow(width, height int) {
   glfw.OpenWindowHint(glfw.OpenGLVersionMajor, 3)
   glfw.OpenWindowHint(glfw.OpenGLVersionMinor, 2)
   if err := glfw.OpenWindow(width, height, 8, 8, 8, 8, 8, 8, glfw.Windowed); err != nil {
@@ -18,11 +20,11 @@ func initGlfw(width, height int) {
   }
 
   if glInit() != 0 {
-   fmt.Println("gl error")
+   fmt.Println("error initializing OpenGL")
   }
   glfw.SetWindowSizeCallback(onResize)
   glfw.SetKeyCallback(onKey)
-  glfw.SetSwapInterval(1)
+  glfw.SetSwapInterval(0)
   glLineWidth(2)
 }
 

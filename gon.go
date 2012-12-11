@@ -13,7 +13,8 @@ type Game struct {
 	player *Player
 	program Program
 	positionAttrib AttribLocation
-	modelToCameraMatrixUniform, colorUniform UniformLocation 
+	cameraToClipMatrixUniform, colorUniform UniformLocation 
+  cameraToClipMatrix Matrix4x4
 	vao VertexArray
 	text TextRenderer
 }
@@ -43,7 +44,8 @@ var game Game
 
 func main() {
 	game = Game {}
-  initGlfw(int(width),int(height))
+  initGlfw()
+  createWindow(int(width), int(height))
 	game.text = NewTextRenderer("./PixelCarnageMono.ttf", 18, 64)
   game.gameState = initialized
   defer terminateGlfw()
@@ -66,12 +68,10 @@ func init_resources() bool {
 
 	vs, err := NewShader(GL_VERTEX_SHADER, `#version 150
     in vec4 position;
-	uniform mat4 cameraToClipMatrix;
-	uniform mat4 modelToCameraMatrix;	
+    uniform mat4 cameraToClipMatrix;
     void main()
     {
-		vec4 cameraPos = modelToCameraMatrix * position;
-    	gl_Position = cameraToClipMatrix * cameraPos;
+    	gl_Position = cameraToClipMatrix * position;
     }`)
 
 	if err != nil {
@@ -80,11 +80,11 @@ func init_resources() bool {
 	}
 
 	fs, err := NewShader(GL_FRAGMENT_SHADER, `#version 150
-		uniform vec4 color;
-      out vec4 outputF;
-      void main(void) {
-        outputF = color;
-      }`)
+    uniform vec4 color;
+    out vec4 outputF;
+    void main(void) {
+      outputF = color;
+    }`)
 
 	if err != nil {
 		log.Printf("Error compiling fragment shader\n")
@@ -118,20 +118,16 @@ func init_resources() bool {
 	vao.Unbind()
 
 	cameraToClipMatrixUniform := program.GetUniformLocation("cameraToClipMatrix")
-	modelToCameraMatrixUniform := program.GetUniformLocation("modelToCameraMatrix")
 	colorUniform := program.GetUniformLocation("color")
 
 	zNear := float32(0.0)
 	zFar := float32(45.0)
 	cameraToClipMatrix := ortho(0, float32(width), 0, float32(height), zNear, zFar)
 
-	program.Use()
-	cameraToClipMatrixUniform.UniformMatrix4fv(cameraToClipMatrix)
-	program.Unuse()
-
 	game.program = program
 	game.vao = vao
-	game.modelToCameraMatrixUniform = modelToCameraMatrixUniform
+	game.cameraToClipMatrixUniform = cameraToClipMatrixUniform
+	game.cameraToClipMatrix = cameraToClipMatrix
 	game.colorUniform = colorUniform
 	return true
 }
@@ -190,27 +186,16 @@ func render() {
 					continue
 				}
 				location := e.Location()
-				//translateMatrix := NewMatrix4x4(1.0)
-				//translateMatrix[3] = Vector4{float32((location.x/width) - 0.5), -float32((location.y/height) - 0.5), -1, 1}
-				
-        theScale := Vector4{float32(e.Size()), float32(e.Size()), 1, 1}
-				//scaleMatrix := NewMatrix4x4(1.0)
-				//scaleMatrix[0].x = theScale.x
-				//scaleMatrix[1].y = theScale.y
-				//scaleMatrix[2].z = theScale.z
-				//scaleMatrix[3] = Vector4{0.0,0.0,0.0, 1.0}
-				//modelToCameraMatrix := translateMatrix.mult(scaleMatrix)
-        
+        scale := float32(e.Size())
 
-	translateMatrix := NewMatrix4x4(1.0)
-	translateMatrix[3] = Vector4{float32(location.x), float32(location.y), -1, 1}
-	scaleMatrix := NewMatrix4x4(1.0)
-	scaleMatrix[0].x = theScale.x
-	scaleMatrix[1].y = theScale.y
-	modelToCameraMatrix := translateMatrix.mult(scaleMatrix)
+        translateMatrix := NewMatrix4x4(1.0)
+        translateMatrix[3] = Vector4{float32(location.x), float32(location.y), -1, 1}
+        scaleMatrix := NewMatrix4x4(1.0)
+        scaleMatrix[0].x = scale
+        scaleMatrix[1].y = scale
+        modelToCameraMatrix := translateMatrix.mult(scaleMatrix)
 
-
-				game.modelToCameraMatrixUniform.UniformMatrix4fv(modelToCameraMatrix)
+        game.cameraToClipMatrixUniform.UniformMatrix4fv(game.cameraToClipMatrix.mult(modelToCameraMatrix))
 
 				if e == game.player {
 					game.colorUniform.Uniform4fv(Vector4{0,0,1,1})
