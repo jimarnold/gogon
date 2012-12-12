@@ -3,6 +3,7 @@ package main
 import "fmt"
 import "os"
 import "github.com/go-gl/glfw"
+import "github.com/jimarnold/gl"
 
 func initGlfw() {
   if err := glfw.Init(); err != nil {
@@ -19,13 +20,13 @@ func createWindow(width, height int) {
     os.Exit(1)
   }
 
-  if glInit() != 0 {
+  if gl.Init() != 0 {
    fmt.Println("error initializing OpenGL")
   }
   glfw.SetWindowSizeCallback(onResize)
   glfw.SetKeyCallback(onKey)
   glfw.SetSwapInterval(0)
-  glLineWidth(2)
+  gl.LineWidth(2)
 }
 
 func terminateGlfw() {
@@ -33,7 +34,7 @@ func terminateGlfw() {
 }
 
 func onResize(w, h int) {
-  glViewport(0, 0, w, h)
+  gl.Viewport(0, 0, w, h)
 }
 
 func onKey(key, state int) {

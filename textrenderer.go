@@ -4,6 +4,7 @@ import (
 	"code.google.com/p/freetype-go/freetype"
 	"code.google.com/p/freetype-go/freetype/truetype"
 	"github.com/go-gl/glh"
+	"github.com/jimarnold/gl"
 	"image"
 	"io/ioutil"
 	"log"
@@ -11,13 +12,13 @@ import (
 )
 
 type TextRenderer struct {
-	program        Program
-	vs, fs         Shader
-	positionAttrib AttribLocation
-	colorUniform   UniformLocation
-	offsetUniform  UniformLocation
-	vao            VertexArray
-	vbo            Buffer
+	program        gl.Program
+	vs, fs         gl.Shader
+	positionAttrib gl.AttribLocation
+	colorUniform   gl.UniformLocation
+	offsetUniform  gl.UniformLocation
+	vao            gl.VertexArray
+	vbo            gl.Buffer
 	offsets        []float32
 }
 
@@ -26,39 +27,39 @@ func NewTextRenderer(fontPath string, scale int32, dpi float64) TextRenderer {
 	coords, texture, offsets := generateAtlas(font, scale, dpi)
 	program := createProgram()
 
-	vao := glGenVertexArray()
+	vao := gl.GenVertexArray()
 	vao.Bind()
 
-	vbo := glGenBuffer()
-	vbo.Bind(GL_ARRAY_BUFFER)
-	glBufferData(GL_ARRAY_BUFFER, int(reflect.TypeOf(Vector4{}).Size())*len(coords), coords, GL_STATIC_DRAW)
+	vbo := gl.GenBuffer()
+	vbo.Bind(gl.ARRAY_BUFFER)
+	gl.BufferData(gl.ARRAY_BUFFER, int(reflect.TypeOf(Vector4{}).Size())*len(coords), coords, gl.STATIC_DRAW)
 
 	positionAttrib := program.GetAttribLocation("position")
-	positionAttrib.AttribPointer(4, GL_FLOAT, false, 0, nil)
+	positionAttrib.AttribPointer(4, gl.FLOAT, false, 0, nil)
 	positionAttrib.EnableArray()
-	vbo.Unbind(GL_ARRAY_BUFFER)
+	vbo.Unbind(gl.ARRAY_BUFFER)
 
 	textureUniform := program.GetUniformLocation("tex")
 	offsetUniform := program.GetUniformLocation("offset")
 	colorUniform := program.GetUniformLocation("color")
 
-	glActiveTexture(GL_TEXTURE0)
-	tex := glGenTexture()
-	tex.Bind(GL_TEXTURE_2D)
+	gl.ActiveTexture(gl.TEXTURE0)
+	tex := gl.GenTexture()
+	tex.Bind(gl.TEXTURE_2D)
 	textureUniform.Uniform1i(0)
 
 	/* We require 1 byte alignment when uploading texture data */
-	glPixelStorei(GL_UNPACK_ALIGNMENT, 1)
+	gl.PixelStorei(gl.UNPACK_ALIGNMENT, 1)
 
 	/* Clamping to edges is important to prevent artifacts when scaling */
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE)
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE)
+	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
+	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
 
 	/* Linear filtering usually looks best for text */
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
+	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
+	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
 
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, texture.Bounds().Dx(), texture.Bounds().Dy(), 0, GL_RGBA, GL_UNSIGNED_BYTE, texture.Pix)
+	gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGBA, texture.Bounds().Dx(), texture.Bounds().Dy(), 0, gl.RGBA, gl.UNSIGNED_BYTE, texture.Pix)
 
 	vao.Unbind()
 	return TextRenderer {
@@ -146,25 +147,25 @@ func generateAtlas(font *truetype.Font, scale int32, dpi float64) ([]Vector4, *i
 }
 
 func (this *TextRenderer) Draw(s string, location, color Vector4) {
-	glEnable(GL_BLEND)
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+	gl.Enable(gl.BLEND)
+	gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
 
 	this.program.Use()
 	this.vao.Bind()
 
-	this.colorUniform.Uniform4fv(color)
+	this.colorUniform.Uniform4fv(color.To_a())
 	totalOffset := float32(0)
 
 	for _, ch := range s {
 		index := int(ch-32)
 		offset := this.offsets[index]
-		this.offsetUniform.Uniform4fv(Vector4{totalOffset, 0, 0, 0}.Add(location))
-		glDrawArrays(GL_TRIANGLE_STRIP, index * 4, 4)
+		this.offsetUniform.Uniform4fv(Vector4{totalOffset, 0, 0, 0}.Add(location).To_a())
+		gl.DrawArrays(gl.TRIANGLE_STRIP, index * 4, 4)
 		totalOffset += offset
 	}
 	this.vao.Unbind()
 	this.program.Unuse()
-	glDisable(GL_BLEND)
+	gl.Disable(gl.BLEND)
 }
 
 func (this *TextRenderer) Delete() {
@@ -173,11 +174,11 @@ func (this *TextRenderer) Delete() {
 	this.program.Delete()
 	this.vbo.Delete()
 	this.vao.Delete()
-	log.Println(glGetError())
+	log.Println(gl.GetError())
 }
 
-func createProgram() Program {
-	vs,err := NewShader(GL_VERTEX_SHADER,`#version 150
+func createProgram() gl.Program {
+	vs,err := NewShader(gl.VERTEX_SHADER,`#version 150
     in vec4 position;
     out vec2 texpos;	
     uniform vec4 offset;
@@ -191,7 +192,7 @@ func createProgram() Program {
 		log.Println(err)
 	}
 
-	fs,err := NewShader(GL_FRAGMENT_SHADER,
+	fs,err := NewShader(gl.FRAGMENT_SHADER,
 	`#version 150
     in vec2 texpos;
     uniform sampler2D tex;

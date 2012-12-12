@@ -5,17 +5,18 @@ import (
 	"math"
 	"reflect"
 	"github.com/go-gl/glfw"
+  "github.com/jimarnold/gl"
 )
 
 type Game struct {
 	gameState GameState
 	elements []Element
 	player *Player
-	program Program
-	positionAttrib AttribLocation
-	cameraToClipMatrixUniform, colorUniform UniformLocation 
+	program gl.Program
+	positionAttrib gl.AttribLocation
+	cameraToClipMatrixUniform, colorUniform gl.UniformLocation 
   cameraToClipMatrix Matrix4x4
-	vao VertexArray
+	vao gl.VertexArray
 	text TextRenderer
 }
 
@@ -66,7 +67,7 @@ func main() {
 
 func init_resources() bool {
 
-	vs, err := NewShader(GL_VERTEX_SHADER, `#version 150
+	vs, err := NewShader(gl.VERTEX_SHADER, `#version 150
     in vec4 position;
     uniform mat4 cameraToClipMatrix;
     void main()
@@ -79,7 +80,7 @@ func init_resources() bool {
 		log.Println(err)
 	}
 
-	fs, err := NewShader(GL_FRAGMENT_SHADER, `#version 150
+	fs, err := NewShader(gl.FRAGMENT_SHADER, `#version 150
     uniform vec4 color;
     out vec4 outputF;
     void main(void) {
@@ -103,18 +104,18 @@ func init_resources() bool {
 		verts[i] = Vector4{float32(math.Cos(angle)), float32(math.Sin(angle)),0,1}
 	}
 
-	vao := glGenVertexArray()
+	vao := gl.GenVertexArray()
 	vao.Bind()
 
-	vbo := glGenBuffer()
-	vbo.Bind(GL_ARRAY_BUFFER)
-	glBufferData(GL_ARRAY_BUFFER, int(reflect.TypeOf(Vector4{}).Size()) * len(verts), verts, GL_STATIC_DRAW)
+	vbo := gl.GenBuffer()
+	vbo.Bind(gl.ARRAY_BUFFER)
+	gl.BufferData(gl.ARRAY_BUFFER, int(reflect.TypeOf(Vector4{}).Size()) * len(verts), verts, gl.STATIC_DRAW)
 
 	positionAttrib := program.GetAttribLocation("position")
-	positionAttrib.AttribPointer(4, GL_FLOAT, false, 0, nil)
+	positionAttrib.AttribPointer(4, gl.FLOAT, false, 0, nil)
 	positionAttrib.EnableArray()
 
-	vbo.Unbind(GL_ARRAY_BUFFER)
+	vbo.Unbind(gl.ARRAY_BUFFER)
 	vao.Unbind()
 
 	cameraToClipMatrixUniform := program.GetUniformLocation("cameraToClipMatrix")
@@ -173,8 +174,8 @@ func waitForReset() {
 }
 
 func render() {
-	glClearColor(0.0, 0.0, 0.0, 0)
-	glClear(GL_COLOR_BUFFER_BIT)
+	gl.ClearColor(0.0, 0.0, 0.0, 0)
+	gl.Clear(gl.COLOR_BUFFER_BIT)
 	switch game.gameState {
 		case initialized:
 			game.text.Draw("Hit space to play!", Vector4{0.75,-1,0,0}, Vector4{1,1,1,1})
@@ -194,17 +195,17 @@ func render() {
         scaleMatrix[0].x = scale
         scaleMatrix[1].y = scale
         modelToCameraMatrix := translateMatrix.mult(scaleMatrix)
-
-        game.cameraToClipMatrixUniform.UniformMatrix4fv(game.cameraToClipMatrix.mult(modelToCameraMatrix))
+        clipMatrix := game.cameraToClipMatrix.mult(modelToCameraMatrix)
+        game.cameraToClipMatrixUniform.UniformMatrix4fv(&(clipMatrix[0].x))
 
 				if e == game.player {
-					game.colorUniform.Uniform4fv(Vector4{0,0,1,1})
+					game.colorUniform.Uniform4fv(Vector4{0,0,1,1}.To_a())
 				} else if e.biggerThan(game.player) {
-					game.colorUniform.Uniform4fv(Vector4{1,0,0,1})
+					game.colorUniform.Uniform4fv(Vector4{1,0,0,1}.To_a())
 				} else {
-					game.colorUniform.Uniform4fv(Vector4{0,1,0,1})
+					game.colorUniform.Uniform4fv(Vector4{0,1,0,1}.To_a())
 				}
-				glDrawArrays(GL_LINE_LOOP, 0, 100)
+				gl.DrawArrays(gl.LINE_LOOP, 0, 100)
 			}
 			game.vao.Unbind()
 			game.program.Unuse()
