@@ -178,7 +178,7 @@ func render() {
 	gl.Clear(gl.COLOR_BUFFER_BIT)
 	switch game.gameState {
 		case initialized:
-			game.text.Draw("Hit space to play!", Vector4{0.75,-1,0,0}, Vector4{1,1,1,1})
+			game.text.Printf(0.75, -1, "Hit space to play!")
 		case running:
 			game.program.Use()
 			game.vao.Bind()	
@@ -187,16 +187,16 @@ func render() {
 					continue
 				}
 				location := e.Location()
-        scale := float32(e.Size())
+				scale := float32(e.Size())
 
-        translateMatrix := NewMatrix4x4(1.0)
-        translateMatrix[3] = Vector4{float32(location.x), float32(location.y), -1, 1}
-        scaleMatrix := NewMatrix4x4(1.0)
-        scaleMatrix[0].x = scale
-        scaleMatrix[1].y = scale
-        modelToCameraMatrix := translateMatrix.mult(scaleMatrix)
-        clipMatrix := game.cameraToClipMatrix.mult(modelToCameraMatrix)
-        game.cameraToClipMatrixUniform.UniformMatrix4fv(&(clipMatrix[0].x))
+				translateMatrix := NewMatrix4x4(1.0)
+				translateMatrix[3] = Vector4{float32(location.x), float32(location.y), -1, 1}
+				scaleMatrix := NewMatrix4x4(1.0)
+				scaleMatrix[0].x = scale
+				scaleMatrix[1].y = scale
+				modelToCameraMatrix := translateMatrix.mult(scaleMatrix)
+				clipMatrix := game.cameraToClipMatrix.mult(modelToCameraMatrix)
+				game.cameraToClipMatrixUniform.UniformMatrix4f(&(clipMatrix[0].x))
 
 				if e == game.player {
 					game.colorUniform.Uniform4fv(Vector4{0,0,1,1}.To_a())
@@ -210,9 +210,9 @@ func render() {
 			game.vao.Unbind()
 			game.program.Unuse()
 		case won:
-			game.text.Draw("You won! Hit space to play again.", Vector4{0.75,-1,0,0}, Vector4{1,1,1,1})
+			game.text.Printf(0.75, -1, "You won! Hit space to play again.")
 		case lost:
-			game.text.Draw("You lost! Hit space to play again.", Vector4{0.5,-1,0,0}, Vector4{1,1,1,1})
+			game.text.Printf(0.5, -1, "You lost! Hit space to play again.")
 	}
 }
 

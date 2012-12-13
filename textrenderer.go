@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"code.google.com/p/freetype-go/freetype"
 	"code.google.com/p/freetype-go/freetype/truetype"
 	"github.com/go-gl/glh"
@@ -20,6 +21,7 @@ type TextRenderer struct {
 	vao            gl.VertexArray
 	vbo            gl.Buffer
 	offsets        []float32
+	color          []float32
 }
 
 func NewTextRenderer(fontPath string, scale int32, dpi float64) TextRenderer {
@@ -69,7 +71,8 @@ func NewTextRenderer(fontPath string, scale int32, dpi float64) TextRenderer {
     positionAttrib:positionAttrib,
     offsetUniform:offsetUniform,
     colorUniform:colorUniform,
-    offsets:offsets}
+    offsets:offsets,
+	color:[]float32{1,1,1,1}}
 }
 
 func loadFont(fontPath string) *truetype.Font {
@@ -146,20 +149,22 @@ func generateAtlas(font *truetype.Font, scale int32, dpi float64) ([]Vector4, *i
 	return verts, img, offsets
 }
 
-func (this *TextRenderer) Draw(s string, location, color Vector4) {
+func (this *TextRenderer) Printf(x, y float32, fs string, argv ...interface{}) {
 	gl.Enable(gl.BLEND)
 	gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
 
 	this.program.Use()
 	this.vao.Bind()
 
-	this.colorUniform.Uniform4fv(color.To_a())
+	this.colorUniform.Uniform4fv(this.color)
 	totalOffset := float32(0)
+
+	s := fmt.Sprintf(fs, argv...)
 
 	for _, ch := range s {
 		index := int(ch-32)
 		offset := this.offsets[index]
-		this.offsetUniform.Uniform4fv(Vector4{totalOffset, 0, 0, 0}.Add(location).To_a())
+		this.offsetUniform.Uniform2f(x + totalOffset, y)
 		gl.DrawArrays(gl.TRIANGLE_STRIP, index * 4, 4)
 		totalOffset += offset
 	}
@@ -181,9 +186,9 @@ func createProgram() gl.Program {
 	vs,err := NewShader(gl.VERTEX_SHADER,`#version 150
     in vec4 position;
     out vec2 texpos;	
-    uniform vec4 offset;
+    uniform vec2 offset;
     void main() {
-        gl_Position = vec4(position.xy, 0, 1) + offset;
+        gl_Position = vec4(position.xy + offset, 0, 1);
 		texpos = position.zw;
     }`)
 
