@@ -5,7 +5,8 @@ import (
 	"math"
 	"reflect"
 	"github.com/go-gl/glfw"
-  "github.com/jimarnold/gl"
+	"github.com/jimarnold/gl"
+	"github.com/jimarnold/gltext"
 )
 
 type Game struct {
@@ -17,7 +18,7 @@ type Game struct {
 	cameraToClipMatrixUniform, colorUniform gl.UniformLocation 
   cameraToClipMatrix Matrix4x4
 	vao gl.VertexArray
-	text TextRenderer
+	text *gltext.Font
 }
 
 type GameState byte
@@ -47,20 +48,23 @@ func main() {
 	game = Game {}
   initGlfw()
   createWindow(int(width), int(height))
-	game.text = NewTextRenderer("./PixelCarnageMono.ttf", 18, 64)
+	game.text = gltext.NewFont("./PixelCarnageMono.ttf", 18, 64, float32(width), float32(height))
   game.gameState = initialized
   defer terminateGlfw()
   previousFrameTime := glfw.Time()
-
+  profiler := NewProfiler(game.text)
   init_resources()
   defer free_resources()
 
+  profiler.start()
   for glfw.WindowParam(glfw.Opened) == 1 {
     now := glfw.Time()
     elapsed := now - previousFrameTime
     previousFrameTime = now
     update(elapsed)
     render()
+    profiler.update()
+    profiler.render()
     glfw.SwapBuffers()
   }
 }

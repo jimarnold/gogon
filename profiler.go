@@ -2,28 +2,29 @@ package main
 
 import (
   "github.com/go-gl/glfw"
-  //"strconv"
-	//"fmt"
+  "github.com/jimarnold/gltext"
 )
 
 type Profiler struct {
   frameSpeed float64
   frameTimes []float64
   frame int
-  startTime float64
+  lastTime float64
+  font *gltext.Font
 }
 
-func NewProfiler() *Profiler {
-  return &Profiler{frameTimes : make([]float64, 32), frameSpeed : 0, frame : 0}
+func NewProfiler(font *gltext.Font) *Profiler {
+  return &Profiler{frameTimes : make([]float64, 256), frameSpeed : 0, frame : 0, font: font}
 }
 
 func(this *Profiler) start() {
-  this.startTime = glfw.Time()
+  this.lastTime = glfw.Time()
 }
 
-func(this *Profiler) stop() {
+func(this *Profiler) update() {
   frameCount := len(this.frameTimes)
-  this.frameTimes[this.frame % frameCount] = glfw.Time() - this.startTime
+  now := glfw.Time()
+  this.frameTimes[this.frame % frameCount] = now - this.lastTime
   movingAverage := 0.0
   for _,f := range this.frameTimes {
     movingAverage += f
@@ -32,14 +33,10 @@ func(this *Profiler) stop() {
   if this.frame % frameCount == 0 {
     this.frameSpeed = movingAverage
   }
-
+  this.lastTime = now
   this.frame++
 }
-var i int = 0
+
 func(this *Profiler) render() {
-	//i++
-	//if i % 32 == 0 {
-		//fmt.Println(strconv.FormatFloat(this.frameSpeed, 'f',10,32))
-	//}
-	//font.drawString(10,10,strconv.FormatFloat(this.frameSpeed, 'f',10,32))
+  this.font.Printf(1.7, 0,"%f", this.frameSpeed)
 }
