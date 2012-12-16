@@ -21,27 +21,27 @@ var game Game
 
 func main() {
 	game = Game {}
-  initGlfw()
-  createWindow(int(width), int(height))
+	initGlfw()
+	createWindow(int(width), int(height))
 	game.text = gltext.NewFont("./PixelCarnageMono.ttf", 18, 64, float32(width), float32(height))
-  game.gameState = initialized
-  defer terminateGlfw()
-  previousFrameTime := glfw.Time()
-  profiler := NewProfiler(game.text)
-  init_resources()
-  defer free_resources()
+	game.gameState = initialized
+	defer terminateGlfw()
+	previousFrameTime := glfw.Time()
+	profiler := NewProfiler(game.text)
+	init_resources()
+	defer free_resources()
 
-  profiler.start()
-  for glfw.WindowParam(glfw.Opened) == 1 {
-    now := glfw.Time()
-    elapsed := now - previousFrameTime
-    previousFrameTime = now
-    game.update(elapsed)
-    render()
-    profiler.update()
-    profiler.render()
-    glfw.SwapBuffers()
-  }
+	profiler.start()
+	for glfw.WindowParam(glfw.Opened) == 1 {
+		now := glfw.Time()
+		elapsed := now - previousFrameTime
+		previousFrameTime = now
+		game.update(elapsed)
+		render()
+		profiler.update()
+		profiler.render()
+		glfw.SwapBuffers()
+	}
 }
 
 func init_resources() bool {
@@ -124,13 +124,13 @@ func ortho(left, right, bottom, top, zNear, zFar float32) Matrix4x4 {
 }
 
 func free_resources() {
-  game.program.Delete()
+	game.program.Delete()
 }
 
 func waitForReset() {
-  if keyDown(KeySpace) {
-    game.start()
-  }
+	if keyDown(KeySpace) {
+		game.start()
+	}
 }
 
 func render() {
@@ -142,9 +142,9 @@ func render() {
 		case running:
 			game.program.Use()
 			game.vao.Bind()	
-			for _, e := range game.elements {
+			game.elements.Each(func(_ int, e Element) {
 				if e.isDead() {
-					continue
+					return
 				}
 				location := e.Location()
 				scale := float32(e.Size())
@@ -166,7 +166,7 @@ func render() {
 					game.colorUniform.Uniform4fv(Vector4{0,1,0,1}.To_a())
 				}
 				gl.DrawArrays(gl.LINE_LOOP, 0, 100)
-			}
+			})
 			game.vao.Unbind()
 			game.program.Unuse()
 		case won:

@@ -7,83 +7,131 @@ import (
 
 type Game struct {
 	gameState GameState
-	elements []Element
+	elements *Elements
 	player *Player
 	program gl.Program
 	positionAttrib gl.AttribLocation
 	cameraToClipMatrixUniform, colorUniform gl.UniformLocation 
-  cameraToClipMatrix Matrix4x4
+	cameraToClipMatrix Matrix4x4
 	vao gl.VertexArray
 	text *gltext.Font
+	totalTime float64
+	elapsedSpawnTime float64
 }
 
 func(this *Game) start() {
+	if this.gameState == running {
+		return
+	}
 	this.createElements()
     this.gameState = running
 }
 
 func(this *Game) createElements() {
-  this.player = &Player{Thing{location : Vector2{width / 2, height / 2}, targetSize : 10, size : 10}}
-  this.elements = make([]Element, 0)
-  this.AddElement(this.player)
-  this.AddElement(createEnemy())
+	this.player = &Player{Thing{location : Vector2{width / 2, height / 2}, targetSize : 10, size : 10}}
+	this.elements = &Elements{make([]Element, 0)}
+	this.elements.Add(this.player)
+	this.elements.Add(createEnemy())
 }
 
 func(this *Game) update(elapsed float64) {
-  switch this.gameState {
-    case running:
-      this.run(elapsed)
-    case initialized, won, lost:
-      waitForReset()
-  }
+	game.totalTime += elapsed
+	switch this.gameState {
+		case running:
+			this.run(elapsed)
+		case initialized, won, lost:
+			waitForReset()
+	}
 }
 
+const enemySpawnInterval float64 = 0.5
+
 func(this *Game) run(elapsed float64) {
-  if random(0,1) > (60 * elapsed) {
-    this.elements = append(this.elements, createEnemy())
-  }
+	game.elapsedSpawnTime += elapsed
+	if game.elapsedSpawnTime > enemySpawnInterval {
+		game.elapsedSpawnTime = 0
+		this.elements.Add(createEnemy())
+	}
 
-  for _,e := range this.elements {
-    e.update(elapsed)
-  }
+	this.elements.Each(func(_ int,e Element) {
+		e.update(elapsed)
+	})
 
-  this.collide()
+	this.collide()
 	this.prune()
-  this.win()
+	this.win()
 }
 
 func(this *Game) prune() {
 	deadThings := make([]Element, 0)
-	for _,e := range this.elements {
+	this.elements.Each(func(_ int,e Element) {
 		if e.isDead() {
 			deadThings = append(deadThings, e)
 		}
-	}
+	})
 	for _,e := range deadThings {
-		this.DeleteElement(e)
+		this.elements.Delete(e)
 	}
 }
 
 func createEnemy() Element {
-    size := random(6, 12)
-    location := Vector2{width, random(0,1) * height}
-    direction := Vector2{random(-1,-0.5), random(-0.1,0.1)}
-    e := NewThing(location, direction, size)
+	size := random(6, 12)
+	location := Vector2{width, random(0,1) * height}
+	direction := Vector2{random(-2,-0.5), random(-0.1,0.1)}
+	e := NewThing(location, direction, size)
 	return &e
 }
 
-func(this *Game) DeleteElement(e Element) {
-	i := IndexOf(this.elements, e)
+func(game *Game) collide() {
+	game.elements.Each(func(i int, a Element) {
+		game.elements.Each(func(j int, b Element) {
+			if j <= i {
+				return
+			}
+			if a.intersects(b) {
+				if a.biggerThan(b) {
+					a.absorb(b)
+				} else {
+					b.absorb(a)
+				}
+			}
+		})
+	})
+}
+
+func(game *Game) win() {
+	if game.player.isDead() {
+		game.gameState = lost
+		return
+	}
+
+	if game.elements.Any(func(e Element) bool {
+		return e != game.player && !e.isDead()
+	}) {
+		game.gameState = running
+		return
+	}
+	game.gameState = won
+}
+
+type Elements struct {
+	items []Element
+}
+
+func(this *Elements) Add(e Element) {
+	this.items = append(this.items, e)
+}
+
+func(this *Elements) Delete(e Element) {
+	i := this.IndexOf(e)
 	if i > -1 {
-	  this.elements = append(this.elements[:i], this.elements[i+1:]...)
+		this.items = append(this.items[:i], this.items[i+1:]...)
 	}
 }
 
-type ElementList []Element
-
-func IndexOf(elements []Element, e Element) int {
-	for i := 0; i < len(elements); i++ {
-    	if (elements[i]) == e {
+func(this *Elements) IndexOf(e Element) int {
+	for i,el := range this.items {
+		if el == e {
 			return i
 		}
 	}
@@ -91,47 +139,24 @@ func IndexOf(elements []Element, e Element) int {
 	return -1
 }
 
-func(this *Game) AddElement(e Element) {
-  this.elements = append(this.elements, e)
+type ElementAction func(int, Element)
+type ElementQuery func(Element) bool
+
+func(this *Elements) Each(action ElementAction) {
+	for i,e := range this.items {
+		action(i,e)
+	}
 }
 
-type ElementAction func(Element)
-
-func(this *Game) EachElement(action ElementAction) {
-  for _,e := range this.elements {
-    action(e)
-  }
+func(this *Elements) Any(query ElementQuery) bool {
+	for _,e := range this.items {
+		if query(e) {
+			return true
+		}
+	}
+	return false
 }
 
-func(game *Game) collide() {
-  for i,a:= range game.elements {
-    for j,b := range game.elements {
-      if j <= i {
-        continue
-      }
-
-      if a.intersects(b) {
-        if a.biggerThan(b) {
-          a.absorb(b)
-        } else {
-          b.absorb(a)
-        }
-      }
-    }
-  }
-}
-
-func(game *Game) win() {
-  if game.player.isDead() {
-    game.gameState = lost
-	return
-  }
-
-  for _, e := range game.elements {
-    if e != game.player && !e.isDead() {
-      game.gameState = running
-		return
-    }
-  }
-  game.gameState = won
+func(this *Elements) Count() int {
+	return len(this.items)
 }
