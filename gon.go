@@ -158,12 +158,13 @@ func render() {
 				clipMatrix := game.cameraToClipMatrix.mult(modelToCameraMatrix)
 				game.cameraToClipMatrixUniform.UniformMatrix4f(&(clipMatrix[0].x))
 
-				if e == game.player {
-					game.colorUniform.Uniform4fv(Vector4{0,0,1,1}.To_a())
-				} else if e.biggerThan(game.player) {
-					game.colorUniform.Uniform4fv(Vector4{1,0,0,1}.To_a())
-				} else {
-					game.colorUniform.Uniform4fv(Vector4{0,1,0,1}.To_a())
+				switch e.(type) {
+					case *Player:
+						game.colorUniform.Uniform4fv(Vector4{0,0,1,1}.To_a())
+					case *Thing:
+						game.colorUniform.Uniform4fv(Vector4{1,0,0,1}.To_a())
+					case *Shrinker:
+						game.colorUniform.Uniform4fv(Vector4{0,1,0,1}.To_a())
 				}
 				gl.DrawArrays(gl.LINE_LOOP, 0, 100)
 			})

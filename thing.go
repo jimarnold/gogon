@@ -6,8 +6,7 @@ import (
 
 type Element interface {
   update(elapsed float64)
-  absorb(other Element)
-  intersects(other Element)bool
+	intersects(other Element)bool
   grow(amount float64)
   biggerThan(other Element) bool
   die()
@@ -24,8 +23,8 @@ type Thing struct {
   targetSize float64
 }
 
-func NewThing(location, direction Vector2, size float64) Thing {
-  return Thing{location, direction, size, size}
+func NewThing(location, direction Vector2, size float64) *Thing {
+  return &Thing{location, direction, size, size}
 }
 
 func(this *Thing) biggerThan(other Element) bool {
@@ -97,14 +96,6 @@ func wrapped(target Vector2) Vector2 {
 func(this *Thing) intersects(other Element) bool {
   distance := this.Location().DistanceTo(other.Location())
   return (this.size + other.Size()) >= distance
-}
-
-func(this *Thing) absorb(other Element) {
-  if this.isDead() {
-    panic("Dead things can't absorb!")
-  }
-  this.targetSize += other.Size()
-  other.die()
 }
 
 func(this *Thing) grow(amount float64) {

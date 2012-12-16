@@ -1,6 +1,7 @@
 package main
 
 import (
+	"math"
 	"github.com/go-gl/glfw"
 )
 
@@ -11,6 +12,7 @@ type Player struct {
 const speed = 10 
 const maxSpeed float64 = 40.0
 const brake = .95
+const initialSize = 24
 
 func (this *Player) update(elapsed float64) {
 	this.Thing.update(elapsed)
@@ -28,6 +30,21 @@ func (this *Player) update(elapsed float64) {
     }
 
 	this.direction = this.direction.scale(brake)
+}
+
+func(this *Thing) absorb(other Element) {
+	if this.isDead() {
+		panic("Dead things can't absorb!")
+	}
+	this.targetSize += other.Size()
+}
+
+func (this * Player) burst() {
+	if this.targetSize > initialSize {
+		debugf("size before: %f", this.targetSize)
+		this.targetSize -= math.Min(this.size - initialSize, this.targetSize / 2)
+		debugf("size after: %f", this.targetSize)
+	}
 }
 
 func(this *Player) up(elapsed float64) {
