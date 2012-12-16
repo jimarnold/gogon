@@ -8,19 +8,6 @@ import (
 	"github.com/jimarnold/gl"
 	"github.com/jimarnold/gltext"
 )
-
-type Game struct {
-	gameState GameState
-	elements []Element
-	player *Player
-	program gl.Program
-	positionAttrib gl.AttribLocation
-	cameraToClipMatrixUniform, colorUniform gl.UniformLocation 
-  cameraToClipMatrix Matrix4x4
-	vao gl.VertexArray
-	text *gltext.Font
-}
-
 type GameState byte
 
 const width float64 = 800
@@ -29,18 +16,6 @@ const initialized GameState = 0
 const running GameState = 1
 const won GameState = 2
 const lost GameState = 3
-
-func createElements() {
-  things := make([]Element, 32)
-  for i := range things {
-    size := random(5, 9)
-    location := Vector2{random(0,1) * width, random(0,1) * height}
-    direction := Vector2{random(-1,1), random(-1,1)}
-    things[i] = NewThing(location, direction, size)
-  }
-  game.player = &Player{Thing{location : Vector2{width / 2, height / 2}, targetSize : 10, size : 10}}
-  game.elements = append(things, game.player)
-}
 
 var game Game
 
@@ -61,7 +36,7 @@ func main() {
     now := glfw.Time()
     elapsed := now - previousFrameTime
     previousFrameTime = now
-    update(elapsed)
+    game.update(elapsed)
     render()
     profiler.update()
     profiler.render()
@@ -152,28 +127,9 @@ func free_resources() {
   game.program.Delete()
 }
 
-func update(elapsed float64) {
-  switch game.gameState {
-    case running:
-      run(elapsed)
-    case initialized, won, lost:
-      waitForReset()
-  }
-}
-
-func run(elapsed float64) {
-  for _,e := range game.elements {
-    e.update(elapsed)
-  }
-
-  game.collide()
-  game.win()
-}
-
 func waitForReset() {
   if keyDown(KeySpace) {
-    createElements()
-    game.gameState = running
+    game.start()
   }
 }
 

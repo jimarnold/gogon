@@ -1,6 +1,8 @@
 package main
 
-import "math"
+import (
+  "math"
+)
 
 type Element interface {
   update(elapsed float64)
@@ -22,11 +24,11 @@ type Thing struct {
   targetSize float64
 }
 
-func NewThing(location, direction Vector2, size float64) *Thing {
-  return &Thing{location, direction, size, size}
+func NewThing(location, direction Vector2, size float64) Thing {
+  return Thing{location, direction, size, size}
 }
 
-func(this Thing) biggerThan(other Element) bool {
+func(this *Thing) biggerThan(other Element) bool {
   return this.Size() > other.Size()
 }
 
@@ -34,19 +36,19 @@ func(this *Thing) die() {
   this.size = 0
 }
 
-func(this Thing) isDead() bool {
+func(this *Thing) isDead() bool {
   return this.size == 0
 }
 
-func(this Thing) Location() Vector2 {
+func(this *Thing) Location() Vector2 {
   return this.location
 }
 
-func(this Thing) getDirection() Vector2 {
+func(this *Thing) getDirection() Vector2 {
   return this.direction
 }
 
-func(this Thing) Size() float64 {
+func(this *Thing) Size() float64 {
   return this.size
 }
 
@@ -58,7 +60,24 @@ func(this *Thing) update(elapsed float64) {
 
   x := this.location.x + (elapsed * this.direction.x * 100)
   y := this.location.y + (elapsed * this.direction.y * 100)
-  this.location = wrapped(Vector2{x,y})
+  if outOfBounds(this.location.x, this.location.y) {
+    this.die()
+  }
+  this.location = (Vector2{x,y})
+}
+
+func outOfBounds(x, y float64) bool {
+  out := func (i float64, min float64, max float64) bool {
+    result := false
+    if i > max {
+      result = true
+    }
+    if i < min {
+      result = true
+    }
+    return result
+  }
+  return out(x, 0, width) || out(y, 0, height)
 }
 
 func wrapped(target Vector2) Vector2 {

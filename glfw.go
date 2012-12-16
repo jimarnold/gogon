@@ -25,7 +25,7 @@ func createWindow(width, height int) {
   }
   glfw.SetWindowSizeCallback(onResize)
   glfw.SetKeyCallback(onKey)
-  glfw.SetSwapInterval(0)
+  glfw.SetSwapInterval(1)
   gl.LineWidth(2)
 }
 

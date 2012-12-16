@@ -1,9 +1,16 @@
 package main
 
-import "math/rand"
-import "time"
+import (
+  "flag"
+  "log"
+  "math/rand"
+  "time"
+)
+
+var LOGGING = flag.Bool("l", false, "log to console")
 
 func init() {
+  flag.Parse()
 	rand.Seed(time.Now().UTC().UnixNano())
 }
 
@@ -24,4 +31,16 @@ func clamp(f float64, min, max float64) float64 {
 
 type Rect struct {
 	top, bottom, left, right float64
+}
+
+func debug(v ...interface{}) {
+  if *LOGGING {
+    log.Println(v)
+  }
+}
+
+func debugf(s string, v ...interface{}) {
+  if *LOGGING {
+    log.Printf(s, v)
+  }
 }
