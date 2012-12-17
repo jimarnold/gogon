@@ -164,12 +164,13 @@ func render() {
 					case *Thing:
 						game.colorUniform.Uniform4fv(Vector4{1,0,0,1}.To_a())
 					case *Shrinker:
-						game.colorUniform.Uniform4fv(Vector4{0,1,0,1}.To_a())
+						game.colorUniform.Uniform4fv(Vector4{0,1,1,1}.To_a())
 				}
 				gl.DrawArrays(gl.LINE_LOOP, 0, 100)
 			})
 			game.vao.Unbind()
 			game.program.Unuse()
+			game.text.Printf(0.25, 0, "Distance travelled: %f", game.totalTime * 10)
 		case won:
 			game.text.Printf(0.75, -1, "You won! Hit space to play again.")
 		case lost:
