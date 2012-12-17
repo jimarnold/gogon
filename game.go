@@ -28,7 +28,7 @@ func(this *Game) start() {
 }
 
 func(this *Game) createElements() {
-	this.player = &Player{Thing{location : Vector2{width / 2, height / 2}, targetSize : initialSize, size : 16}}
+	this.player = &Player{Thing:Thing{location : Vector2{width / 2, height / 2}, targetSize : initialSize, size : 16}, score:0}
 	this.elements = &Elements{make([]Element, 0)}
 	this.elements.Add(this.player)
 	this.elements.Add(createEnemy())
@@ -78,12 +78,14 @@ func createEnemy() Element {
 	size := random(8, 32)
 	location := Vector2{width, random(0,1) * height}
 	direction := Vector2{random(-3,-0.5), random(-0.1,0.1)}
-	if random(0,1) > 0.9 {
-		return &Shrinker{Thing{location:location, direction:direction, size:6, targetSize:6}}
-	} else {
-		return NewThing(location, direction, size)
+	r := random(0,1)
+	if r > 0.0 && r < 0.1 {
+		return &Pickup{Thing{location:location, direction:direction, size:6, targetSize:6}}
 	}
-	panic("wut?")
+	if r > 0.92 {
+		return &Shrinker{Thing{location:location, direction:direction, size:6, targetSize:6}}
+	}
+	return NewThing(location, direction, size)
 }
 
 func(game *Game) collide() {
@@ -93,17 +95,7 @@ func(game *Game) collide() {
 		}
 
 		if game.player.intersects(e) {
-			switch t := e.(type) {
-				default:
-				debugf("unexpected type %T", t)
-			case *Thing:
-				game.player.absorb(e)
-				debug("absorb")
-			case *Shrinker:
-				game.player.burst()
-				debug("burst")
-			}
-			e.die()
+			game.player.collideWith(e)			
 		}
 	})
 }
@@ -114,11 +106,11 @@ func(game *Game) win() {
 		return
 	}
 
-	if game.elements.Any(func(e Element) bool {
-		return e != game.player && !e.isDead()
-	}) {
-		game.gameState = running
-		return
-	}
-	game.gameState = won
+	//if game.elements.Any(func(e Element) bool {
+		//return e != game.player && !e.isDead()
+	//}) {
+		//game.gameState = running
+		//return
+	//}
+	game.gameState = running
 }

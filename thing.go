@@ -59,24 +59,20 @@ func(this *Thing) update(elapsed float64) {
 
   x := this.location.x + (elapsed * this.direction.x * 100)
   y := this.location.y + (elapsed * this.direction.y * 100)
-  if outOfBounds(this.location.x, this.location.y) {
+  if outOfBounds(this.size, this.location.x, this.location.y) {
     this.die()
   }
   this.location = (Vector2{x,y})
 }
 
-func outOfBounds(x, y float64) bool {
+func outOfBounds(size, x, y float64) bool {
   out := func (i float64, min float64, max float64) bool {
-    result := false
-    if i > max {
-      result = true
+    if i > max || i < min {
+      return true
     }
-    if i < min {
-      result = true
-    }
-    return result
+    return false
   }
-  return out(x, 0, width) || out(y, 0, height)
+  return out(x, 0 + size, width) || out(y, 0 + size, height - size)
 }
 
 func wrapped(target Vector2) Vector2 {

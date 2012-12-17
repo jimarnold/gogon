@@ -132,6 +132,7 @@ func waitForReset() {
 		game.start()
 	}
 }
+type Color4f []float32
 
 func render() {
 	gl.ClearColor(0.0, 0.0, 0.0, 0)
@@ -160,17 +161,20 @@ func render() {
 
 				switch e.(type) {
 					case *Player:
-						game.colorUniform.Uniform4fv(Vector4{0,0,1,1}.To_a())
+						game.colorUniform.Uniform4fv(Color4f{0,0,1,1})
 					case *Thing:
-						game.colorUniform.Uniform4fv(Vector4{1,0,0,1}.To_a())
+						game.colorUniform.Uniform4fv(Color4f{1,0,0,1})
 					case *Shrinker:
-						game.colorUniform.Uniform4fv(Vector4{0,1,1,1}.To_a())
+						game.colorUniform.Uniform4fv(Color4f{0,1,1,1})
+					case *Pickup:
+						game.colorUniform.Uniform4fv(Color4f{0,1,0,1})
 				}
 				gl.DrawArrays(gl.LINE_LOOP, 0, 100)
 			})
 			game.vao.Unbind()
 			game.program.Unuse()
-			game.text.Printf(0.25, 0, "Distance travelled: %f", game.totalTime * 10)
+			game.text.Printf(0.05, 0, "Score: %d", game.player.score)
+			game.text.Printf(0.35, 0, "Distance travelled: %f", game.totalTime * 10)
 		case won:
 			game.text.Printf(0.75, -1, "You won! Hit space to play again.")
 		case lost:

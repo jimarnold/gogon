@@ -7,12 +7,13 @@ import (
 
 type Player struct {
 	Thing
+	score int
 }
 
 const speed = 10 
 const maxSpeed float64 = 40.0
 const brake = .95
-const initialSize = 24
+const initialSize = 32
 
 func (this *Player) update(elapsed float64) {
 	this.Thing.update(elapsed)
@@ -32,18 +33,30 @@ func (this *Player) update(elapsed float64) {
 	this.direction = this.direction.scale(brake)
 }
 
-func(this *Thing) absorb(other Element) {
+func(this *Player) collideWith(e Element) {
+	switch t := e.(type) {
+	default:
+		debugf("unexpected type %T", t)
+	case *Thing:
+		this.absorb(e)
+	case *Shrinker:
+		this.burst()
+	case *Pickup:
+		this.score += 10
+	}
+	e.die()
+}
+
+func(this *Player) absorb(e Element) {
 	if this.isDead() {
 		panic("Dead things can't absorb!")
 	}
-	this.targetSize += other.Size()
+	this.targetSize += e.Size()
 }
 
-func (this * Player) burst() {
+func (this *Player) burst() {
 	if this.targetSize > initialSize {
-		debugf("size before: %f", this.targetSize)
 		this.targetSize -= math.Min(this.size - initialSize, this.targetSize / 2)
-		debugf("size after: %f", this.targetSize)
 	}
 }
 
