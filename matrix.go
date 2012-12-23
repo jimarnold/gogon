@@ -41,3 +41,15 @@ func (a Matrix4x4) mult(b Matrix4x4) Matrix4x4 {
 			a0.z*b3.x + a1.z*b3.y + a2.z*b3.z + a3.z*b3.w,
 			a0.w*b3.x + a1.w*b3.y + a2.w*b3.z + a3.w*b3.w}}
 }
+
+func ortho(left, right, bottom, top, zNear, zFar float32) Matrix4x4 {
+	result := NewMatrix4x4(1.0)
+	result[0].x = float32(2.0) / (right - left)
+	result[1].y = float32(2.0) / (top - bottom)
+	result[2].z = float32(-2.0) / (zFar - zNear)
+	result[3].x = -(right + left) / (right - left)
+	result[3].y = -(top + bottom) / (top - bottom)
+	result[3].z = -(zFar + zNear) / (zFar - zNear)
+	return result
+}
+
