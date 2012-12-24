@@ -10,9 +10,9 @@ const height float64 = 600
 
 func main() {
 	initGlfw()
+	defer terminateGlfw()
 	createWindow(int(width), int(height))
 	game := NewGame()
-	defer terminateGlfw()
 	profiler := NewProfiler(game.text)
 	defer game.delete()
 

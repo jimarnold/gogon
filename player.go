@@ -15,6 +15,10 @@ const maxSpeed float64 = 40.0
 const brake = .95
 const initialSize = 32
 
+func NewPlayer(location Vector2) *Player {
+	return &Player{Thing:Thing{location : location, targetSize : initialSize, size : 16, color: Color4f{0,0,1,1}}, score:0}
+}
+
 func (this *Player) update(elapsed float64) {
 	this.Thing.update(elapsed)
 	if(keyDown(KeyW)) {

@@ -14,6 +14,7 @@ type Element interface {
 	Location() Vector2
 	getDirection() Vector2
 	Size() float64
+	Color() Color4f
 }
 
 type Thing struct {
@@ -21,10 +22,11 @@ type Thing struct {
 	direction Vector2
 	size float64
 	targetSize float64
+	color Color4f
 }
 
 func NewThing(location, direction Vector2, size float64) *Thing {
-	return &Thing{location, direction, size, size}
+	return &Thing{location, direction, size, size, Color4f{1,0,0,1}}
 }
 
 func(this *Thing) biggerThan(other Element) bool {
@@ -49,6 +51,10 @@ func(this *Thing) getDirection() Vector2 {
 
 func(this *Thing) Size() float64 {
 	return this.size
+}
+
+func(this *Thing) Color() Color4f {
+	return this.color
 }
 
 func(this *Thing) update(elapsed float64) {

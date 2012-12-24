@@ -116,7 +116,7 @@ func(this *Game) start() {
 }
 
 func(this *Game) createElements() {
-	this.player = &Player{Thing:Thing{location : Vector2{width / 2, height / 2}, targetSize : initialSize, size : 16}, score:0}
+	this.player = NewPlayer(Vector2{width / 2, height / 2})
 	this.elements = &Elements{make([]Element, 0)}
 	this.elements.Add(this.player)
 	this.elements.Add(createEnemy())
@@ -174,10 +174,10 @@ func createEnemy() Element {
 	direction := Vector2{random(-3,-0.5), random(-0.1,0.1)}
 	r := random(0,1)
 	if r > 0.0 && r < 0.1 {
-		return &Pickup{Thing{location:location, direction:direction, size:6, targetSize:6}}
+		return NewPickup(location, direction)
 	}
 	if r > 0.92 {
-		return &Shrinker{Thing{location:location, direction:direction, size:6, targetSize:6}}
+		return NewShrinker(location, direction)
 	}
 	return NewThing(location, direction, size)
 }
@@ -229,17 +229,7 @@ func(this *Game) render() {
 				modelToCameraMatrix := translateMatrix.mult(scaleMatrix)
 				clipMatrix := this.cameraToClipMatrix.mult(modelToCameraMatrix)
 				this.cameraToClipMatrixUniform.UniformMatrix4f(&(clipMatrix[0].x))
-
-				switch e.(type) {
-					case *Player:
-						this.colorUniform.Uniform4fv(Color4f{0,0,1,1})
-					case *Thing:
-						this.colorUniform.Uniform4fv(Color4f{1,0,0,1})
-					case *Shrinker:
-						this.colorUniform.Uniform4fv(Color4f{0,1,1,1})
-					case *Pickup:
-						this.colorUniform.Uniform4fv(Color4f{0,1,0,1})
-				}
+				this.colorUniform.Uniform4fv(e.Color())
 				gl.DrawArrays(gl.LINE_LOOP, 0, 100)
 			})
 			this.vao.Unbind()
