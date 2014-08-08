@@ -2,44 +2,55 @@ package main
 
 import "fmt"
 import "os"
-import "github.com/go-gl/glfw"
-import "github.com/jimarnold/gl"
+import glfw "github.com/go-gl/glfw3"
+import "github.com/go-gl/gl"
 
 func initGlfw() {
-	if err := glfw.Init(); err != nil {
-		fmt.Printf("%v\n", err)
+	if !glfw.Init() {
+                panic("Can't init glfw");
 		os.Exit(1)
 	}
 }
 
-func createWindow(width, height int) {
-	glfw.OpenWindowHint(glfw.OpenGLVersionMajor, 3)
-	glfw.OpenWindowHint(glfw.OpenGLVersionMinor, 2)
-	if err := glfw.OpenWindow(width, height, 8, 8, 8, 8, 8, 8, glfw.Windowed); err != nil {
-		fmt.Printf("%v\n", err)
-		os.Exit(1)
-	}
+func errorCallback(err glfw.ErrorCode, desc string) {
+    fmt.Printf("%v: %v\n", err, desc)
+}
 
+
+func createWindow(width, height int) *glfw.Window {
+
+    glfw.SetErrorCallback(errorCallback)
+    glfw.WindowHint(glfw.OpenglForwardCompatible, glfw.True);
+    glfw.WindowHint(glfw.OpenglProfile, glfw.OpenglCoreProfile)
+    glfw.WindowHint(glfw.ContextVersionMajor, 3)
+    glfw.WindowHint(glfw.ContextVersionMinor, 2)
+	window, err := glfw.CreateWindow(width, height, "Gon", nil, nil)
+        if err != nil {
+            fmt.Println(err)
+            panic("Unable to create window")
+        }
+        window.MakeContextCurrent()
 	if gl.Init() != 0 {
 		fmt.Println("error initializing OpenGL")
 	}
-	glfw.SetWindowSizeCallback(onResize)
-	glfw.SetKeyCallback(onKey)
-	glfw.SetSwapInterval(1)
+	window.SetSizeCallback(onResize)
+	window.SetKeyCallback(onKey)
+	glfw.SwapInterval(1)
 	gl.LineWidth(2)
+        return window
 }
 
 func terminateGlfw() {
 	glfw.Terminate()
 }
 
-func onResize(w, h int) {
+func onResize(window *glfw.Window, w, h int) {
 	gl.Viewport(0, 0, w, h)
 }
 
-func onKey(key, state int) {
-	if key == glfw.KeyEsc && state == glfw.KeyPress {
-		glfw.CloseWindow()
+func onKey(window *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
+	if key == glfw.KeyEscape && action == glfw.Press {
+		window.SetShouldClose(true)
 	}
 }
 

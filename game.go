@@ -4,7 +4,7 @@ import (
 	"log"
 	"math"
 	"reflect"
-	"github.com/jimarnold/gl"
+	"github.com/go-gl/gl"
 	"github.com/jimarnold/gltext"
 )
 
@@ -228,8 +228,9 @@ func(this *Game) render() {
 				scaleMatrix[1].y = scale
 				modelToCameraMatrix := translateMatrix.mult(scaleMatrix)
 				clipMatrix := this.cameraToClipMatrix.mult(modelToCameraMatrix)
-				this.cameraToClipMatrixUniform.UniformMatrix4f(&(clipMatrix[0].x))
-				this.colorUniform.Uniform4fv(e.Color())
+                                var clipMatrixArray = clipMatrix.toa();
+				this.cameraToClipMatrixUniform.UniformMatrix4f(false, &clipMatrixArray)
+				this.colorUniform.Uniform4fv(1, e.Color())
 				gl.DrawArrays(gl.LINE_LOOP, 0, 100)
 			})
 			this.vao.Unbind()

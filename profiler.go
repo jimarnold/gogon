@@ -1,7 +1,7 @@
 package main
 
 import (
-  "github.com/go-gl/glfw"
+  glfw "github.com/go-gl/glfw3"
   "github.com/jimarnold/gltext"
 )
 
@@ -18,12 +18,12 @@ func NewProfiler(font *gltext.Font) *Profiler {
 }
 
 func(this *Profiler) start() {
-  this.lastTime = glfw.Time()
+  this.lastTime = glfw.GetTime()
 }
 
 func(this *Profiler) update() {
   frameCount := len(this.frameTimes)
-  now := glfw.Time()
+  now := glfw.GetTime()
   this.frameTimes[this.frame % frameCount] = now - this.lastTime
   movingAverage := 0.0
   for _,f := range this.frameTimes {

@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/go-gl/glfw"
+	glfw "github.com/go-gl/glfw3"
 )
 
 const width float64 = 800
@@ -11,22 +11,22 @@ const height float64 = 600
 func main() {
 	initGlfw()
 	defer terminateGlfw()
-	createWindow(int(width), int(height))
+	window := createWindow(int(width), int(height))
 	game := NewGame()
 	profiler := NewProfiler(game.text)
 	defer game.delete()
 
-	previousFrameTime := glfw.Time()
+	previousFrameTime := glfw.GetTime()
 	profiler.start()
-	for glfw.WindowParam(glfw.Opened) == 1 {
-		now := glfw.Time()
+	for !window.ShouldClose() {
+		now := glfw.GetTime()
 		elapsed := now - previousFrameTime
 		previousFrameTime = now
 		game.update(elapsed)
 		game.render()
 		profiler.update()
 		profiler.render()
-		glfw.SwapBuffers()
+		window.SwapBuffers()
 	}
 }
 

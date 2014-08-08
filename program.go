@@ -3,7 +3,7 @@ package main
 import (
 	"errors"
 	"log"
-  "github.com/jimarnold/gl"
+  "github.com/go-gl/gl"
 )
 
 func NewProgram(vs, fs gl.Shader) gl.Program {

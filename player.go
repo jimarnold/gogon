@@ -2,7 +2,7 @@ package main
 
 import (
 	"math"
-	"github.com/go-gl/glfw"
+	glfw "github.com/go-gl/glfw3"
 )
 
 type Player struct {
