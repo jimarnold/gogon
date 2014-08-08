@@ -24,20 +24,20 @@ func createWindow(width, height int) *glfw.Window {
     glfw.WindowHint(glfw.OpenglProfile, glfw.OpenglCoreProfile)
     glfw.WindowHint(glfw.ContextVersionMajor, 3)
     glfw.WindowHint(glfw.ContextVersionMinor, 2)
-	window, err := glfw.CreateWindow(width, height, "Gon", nil, nil)
-        if err != nil {
-            fmt.Println(err)
-            panic("Unable to create window")
-        }
-        window.MakeContextCurrent()
-	if gl.Init() != 0 {
-		fmt.Println("error initializing OpenGL")
-	}
-	window.SetSizeCallback(onResize)
-	window.SetKeyCallback(onKey)
-	glfw.SwapInterval(1)
-	gl.LineWidth(2)
-        return window
+    window, err := glfw.CreateWindow(width, height, "Gon", nil, nil)
+    if err != nil {
+        fmt.Println(err)
+        panic("Unable to create window")
+    }
+    window.MakeContextCurrent()
+    if gl.Init() != 0 {
+            fmt.Println("error initializing OpenGL")
+    }
+    window.SetSizeCallback(onResize)
+    window.SetKeyCallback(onKey)
+    glfw.SwapInterval(1)
+    gl.LineWidth(2)
+    return window
 }
 
 func terminateGlfw() {
@@ -50,13 +50,7 @@ func onResize(window *glfw.Window, w, h int) {
 
 func onKey(window *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
 	if key == glfw.KeyEscape && action == glfw.Press {
-		window.SetShouldClose(true)
+            window.SetShouldClose(true)
 	}
 }
-
-const KeyA int = 65
-const KeyS int = 83
-const KeyD int = 68
-const KeyW int = 87
-const KeySpace int = 32
 

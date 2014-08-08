@@ -5,6 +5,7 @@ import (
 	"math"
 	"reflect"
 	"github.com/go-gl/gl"
+        glfw "github.com/go-gl/glfw3"
 	"github.com/jimarnold/gltext"
 )
 
@@ -20,6 +21,7 @@ type Game struct {
 	text *gltext.Font
 	totalTime float64
 	elapsedSpawnTime float64
+        window *glfw.Window
 }
 
 type GameState byte
@@ -29,8 +31,8 @@ const running GameState = 1
 const won GameState = 2
 const lost GameState = 3
 
-func NewGame() *Game {
-	game := &Game{}
+func NewGame(window *glfw.Window) *Game {
+	game := &Game{window:window}
 	game.init()
 	return game
 }
@@ -116,7 +118,7 @@ func(this *Game) start() {
 }
 
 func(this *Game) createElements() {
-	this.player = NewPlayer(Vector2{width / 2, height / 2})
+	this.player = NewPlayer(Vector2{width / 2, height / 2}, this.window)
 	this.elements = &Elements{make([]Element, 0)}
 	this.elements.Add(this.player)
 	this.elements.Add(createEnemy())
@@ -133,7 +135,7 @@ func(this *Game) update(elapsed float64) {
 }
 
 func(this *Game) waitForReset() {
-	if keyDown(KeySpace) {
+	if keyDown(this.window, glfw.KeySpace) {
 		this.start()
 	}
 }

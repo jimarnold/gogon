@@ -8,6 +8,7 @@ import (
 type Player struct {
 	Thing
 	score int
+        window *glfw.Window
 }
 
 const speed = 10 
@@ -15,22 +16,22 @@ const maxSpeed float64 = 40.0
 const brake = .95
 const initialSize = 32
 
-func NewPlayer(location Vector2) *Player {
-	return &Player{Thing:Thing{location : location, targetSize : initialSize, size : 16, color: Color4f{0,0,1,1}}, score:0}
+func NewPlayer(location Vector2, window *glfw.Window) *Player {
+	return &Player{Thing:Thing{location : location, targetSize : initialSize, size : 16, color: Color4f{0,0,1,1}}, score:0, window : window}
 }
 
 func (this *Player) update(elapsed float64) {
 	this.Thing.update(elapsed)
-	if(keyDown(KeyW)) {
+	if(keyDown(this.window, glfw.KeyW)) {
       this.up(elapsed)
     }
-	if(keyDown(KeyS)) {
+	if(keyDown(this.window, glfw.KeyS)) {
       this.down(elapsed)
     }
-	if(keyDown(KeyA)) {
+	if(keyDown(this.window, glfw.KeyA)) {
       this.left(elapsed)
     }
-	if(keyDown(KeyD)) {
+	if(keyDown(this.window, glfw.KeyD)) {
       this.right(elapsed)
     }
 
@@ -84,6 +85,6 @@ func(this *Player) thrust(v Vector2) {
 	this.direction = this.direction.Add(v).clampedTo(maxSpeed)
 }
 
-func keyDown(key int) bool {
-	return glfw.Key(key) == 1
+func keyDown(window *glfw.Window, key glfw.Key) bool {
+	return window.GetKey(key) == glfw.Press
 }
