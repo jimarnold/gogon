@@ -1,16 +1,16 @@
 package main
 
 import (
-  "flag"
-  "log"
-  "math/rand"
-  "time"
+	"flag"
+	"log"
+	"math/rand"
+	"time"
 )
 
 var LOGGING = flag.Bool("l", false, "log to console")
 
 func init() {
-  flag.Parse()
+	flag.Parse()
 	rand.Seed(time.Now().UTC().UnixNano())
 }
 
@@ -34,13 +34,13 @@ type Rect struct {
 }
 
 func debug(v ...interface{}) {
-  if *LOGGING {
-    log.Println(v)
-  }
+	if *LOGGING {
+		log.Println(v)
+	}
 }
 
 func debugf(s string, v ...interface{}) {
-  if *LOGGING {
-    log.Printf(s, v)
-  }
+	if *LOGGING {
+		log.Printf(s, v)
+	}
 }

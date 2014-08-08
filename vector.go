@@ -56,6 +56,6 @@ func (v1 Vector4) Add(v2 Vector4) Vector4 {
 	return Vector4{v1.x + v2.x, v1.y + v2.y, v1.z + v2.z, v1.w + v2.w}
 }
 
-func (this Vector4) To_a() [] float32 {
-  return []float32{this.x, this.y, this.z, this.w}
+func (this Vector4) To_a() []float32 {
+	return []float32{this.x, this.y, this.z, this.w}
 }

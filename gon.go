@@ -7,7 +7,6 @@ import (
 const width float64 = 800
 const height float64 = 600
 
-
 func main() {
 	initGlfw()
 	defer terminateGlfw()
@@ -19,14 +18,14 @@ func main() {
 	previousFrameTime := glfw.GetTime()
 	profiler.start()
 	for !window.ShouldClose() {
-            now := glfw.GetTime()
-            elapsed := now - previousFrameTime
-            previousFrameTime = now
-            game.update(elapsed)
-            game.render()
-            profiler.update()
-            profiler.render()
-            window.SwapBuffers()
-            glfw.PollEvents()
+		now := glfw.GetTime()
+		elapsed := now - previousFrameTime
+		previousFrameTime = now
+		game.update(elapsed)
+		game.render()
+		profiler.update()
+		profiler.render()
+		window.SwapBuffers()
+		glfw.PollEvents()
 	}
 }
